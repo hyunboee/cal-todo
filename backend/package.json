@@ -1,0 +1,15 @@
+{
+  "name": "cal-todo-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file=.env src/server.js",
+    "migrate": "node --env-file=.env scripts/migrate.js",
+    "grant": "node --env-file=.env scripts/grant.js",
+    "test": "node --env-file=.env.test scripts/migrate.js && node --env-file=.env.test --test --test-concurrency=1",
+    "test:coverage": "node --env-file=.env.test scripts/migrate.js && node --env-file=.env.test --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=\"src/**/*.js\" --test-coverage-include=\"scripts/**/*.js\" --test-coverage-lines=90"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
+  }
+}

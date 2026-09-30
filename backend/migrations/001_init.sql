@@ -6,7 +6,6 @@
 --       해당 기능 구현 때 새 마이그레이션으로 추가한다(ERD 3장, 구조 원칙 PP-10).
 -- FK는 모두 기본값(NO ACTION)이다(ERD 5.4). gen_random_uuid()는 PostgreSQL 13+ 내장 함수다.
 
-BEGIN;
 
 -- 4.1 users
 CREATE TABLE users (
@@ -160,4 +159,3 @@ CREATE TABLE llm_usage_logs (
 -- 계정 일일 상한 집계(FR-29)
 CREATE INDEX llm_usage_logs_user_id_created_at_idx ON llm_usage_logs (user_id, created_at);
 
-COMMIT;

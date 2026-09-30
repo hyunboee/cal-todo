@@ -1,4 +1,4 @@
-# Coupang AI Detail Maker - 도메인 정의서 (v0.3.8 초안)
+# Coupang AI Detail Maker - 도메인 정의서 (v0.3.9 초안)
 
 > 범위: 핵심 비즈니스 규칙과 도메인 간 데이터 흐름. 구현 메커니즘은 파이프라인 원칙(P-ID)에 요약만 두고 상세는 PRD(`docs/2-PRD.md`)의 기술 아키텍처를 따른다. MVP 범위, 우선순위, 일정은 PRD가 관리한다.
 
@@ -8,6 +8,7 @@
 
 | 버전 | 일자 | 변경자 | 변경내용 |
 |---|---|---|---|
+| v0.3.9 | 2026-09-30 | hyunboee (Claude 작성) | DB-01~03 구현 후속 정합화: AC-BR63, AC-BR71(비밀값 스캔 패턴 `DATABASE_URL` → `postgresql://`), 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.8 |
 | v0.3.8 | 2026-09-30 | hyunboee (Claude 작성) | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. P-3, 6장 시퀀스 참가자 API, 7장 다이어그램(DG-3)의 자격 미들웨어 노드, 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.7 |
 | v0.3.7 | 2026-09-30 | hyunboee (Claude 작성) | 문서 간 정합성 재점검 반영: 용어집(자격 검사 대상 API에 폼 저장 추가, DEC-05·PRD FR-10 근거), 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.6 |
 | v0.3.6 | 2026-09-30 | hyunboee (Claude 작성) | MVP 일정·범위 2단계(P1 2일 핵심 슬라이스, P2 MVP 완성) 재조정(Claude 위임 결정)에 따른 기준 PRD 버전 갱신만. 9장 머리말의 PRD 참조 버전(본문·규칙 변경 없음, 일정은 PRD 관할). 기준 PRD 버전: v0.3.5 |
@@ -233,7 +234,7 @@
   - BR-62 [파생] 주입에 실패해도 다시 차감하지 않는다. PUBLISHED 프로젝트는 최종 HTML을 몇 번이든 다시 조회·복사·주입할 수 있다.
     - AC: Given PUBLISHED, 주입 FAILED / When 토큰 재발급 후 재주입 / Then 성공, 잔액 불변
   - BR-63 [파생] 확장 프로그램에는 LLM API 키나 서버 비밀값을 넣지 않는다.
-    - AC: Given 확장 패키지 / When `sk-`, `AIza`, `DATABASE_URL` 등 비밀값 패턴 스캔 / Then 0건
+    - AC: Given 확장 패키지 / When `sk-`, `AIza`, `postgresql://` 등 비밀값 패턴 스캔 / Then 0건
   - BR-64 [파생] 확장 프로그램은 주입 결과를 `POST /p/:id/publish-report`로 보고하고, 서버는 injectStatus를 갱신한다. 보고는 과금에 영향을 주지 않는다.
     - AC: Given 주입 성공 / When 보고 / Then INJECTED, HtmlInjectedToWing, 원장 변화 없음
   - BR-65 [가정] 주입이 실패하거나 주입할 수 없는 환경(데스크톱 Chrome 확장 외)이면 최종 HTML 클립보드 복사를 제공한다. WING 셀렉터는 서버 설정으로 원격 관리한다. (D-7, D-33)
@@ -257,7 +258,7 @@
   - BR-70 [원문] 도메인 로직은 Role만 호출하고 Provider나 모델명은 알지 못한다. Provider 교체는 서버 환경변수와 ModelRoute 설정만 바꿔서 한다.
     - AC: Given MAIN을 Gemini에서 Claude로 설정 변경 / When 생성 / Then LLM 어댑터 모듈 밖 코드 변경 0줄, LlmUsageLog.provider=anthropic
   - BR-71 [원문] 모든 LLM 호출은 백엔드 서버에서만 하고 API 키는 백엔드 환경변수에만 둔다. (P-2)
-    - AC: Given 프론트 번들 / When `sk-`, `AIza`, `DATABASE_URL` 패턴 스캔 / Then 0건
+    - AC: Given 프론트 번들 / When `sk-`, `AIza`, `postgresql://` 패턴 스캔 / Then 0건
   - BR-72 [파생] Provider가 Prompt Caching을 지원하면(Anthropic) 고정 시스템 프롬프트(디자인 규칙, BR-30 규격)에 적용한다.
     - AC: Given Claude MAIN, 캐시 최소 길이 이상의 같은 시스템 프롬프트 / When 캐시 TTL 안에서 연속 2회 호출 / Then 두 번째 cached=true
   - BR-73 [파생] 모든 LLM 호출(실패 포함)의 사용량과 지연 시간을 사용자·프로젝트 단위로 기록한다(KPI-4, KPI-7, BR-75 근거).
@@ -585,7 +586,7 @@ flowchart LR
 
 ## 9. 결정 로그 (D)
 
-> 상태: `미결` 결정 전 / `가정` 기본값을 적용 중이며 뒤집을 수 있음 / `확정` 합의 완료 / `폐기`. 담당은 모두 hyunboee(1인 개발). 관련 열의 PRD ID는 PRD v0.3.7 항목이다.
+> 상태: `미결` 결정 전 / `가정` 기본값을 적용 중이며 뒤집을 수 있음 / `확정` 합의 완료 / `폐기`. 담당은 모두 hyunboee(1인 개발). 관련 열의 PRD ID는 PRD v0.3.8 항목이다.
 
 | ID | 항목 | 선택지 | 결과(현재) | 상태 | 담당 | 기한 | 관련 |
 |---|---|---|---|---|---|---|---|

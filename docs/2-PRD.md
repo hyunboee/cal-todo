@@ -1,15 +1,15 @@
-# Coupang AI Detail Maker - PRD (v0.3.7 초안)
+# Coupang AI Detail Maker - PRD (v0.3.8 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 제품 요구사항 정의서(PRD) |
-| 버전 | v0.3.7 (초안) |
+| 버전 | v0.3.8 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.8 |
-| 참조 문서 | `prompts/PRD생성.md` (PRD 작성 지침, 우선 적용), `docs/1-domain-definition.md` (도메인 정의서 v0.3.8), `valuate/1-domain-definition-v0.2-evaluation.md` (도메인 평가 38/50) |
+| 기준 도메인 정의서 버전 | v0.3.9 |
+| 참조 문서 | `prompts/PRD생성.md` (PRD 작성 지침, 우선 적용), `docs/1-domain-definition.md` (도메인 정의서 v0.3.9), `valuate/1-domain-definition-v0.2-evaluation.md` (도메인 평가 38/50) |
 | 우선순위 원칙 | PRD 지침과 도메인 정의서가 충돌하면 PRD 지침을 따른다. v0.1의 충돌 목록(10장)은 도메인 v0.3에서 모두 반영됐다 |
 
 **표기 규약**
@@ -23,6 +23,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.3.8 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | DB-01~03 구현 후속 정합화: NFR-07(비밀값 스캔 패턴 `DATABASE_URL` → `postgresql://`), 7.2 표 머리말의 도메인 버전 |
 | v0.3.7 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. FR-06, FR-10, FR-21, 4.2 PG 결제 행, 5.8 클레임 문구, 7.2 표, 7.3 SQL, 7.5 다이어그램, 9장 P2 1~2일 차, 10장 #7 |
 | v0.3.6 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.7 | 문서 간 정합성 재점검 반영: FR-06(자격 검사 대상에 폼 저장 추가, DEC-05·FR-10), 4.2 제목·PG 결제 행, 7.2 표 머리말의 도메인 버전, PRD-R-6(M3 → M4), 11.2 PRD-D-6·PRD-D-7 기한(P1 1일 차 명시) |
 | v0.3.5 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.6 | MVP 일정·범위 2단계(P1 2일 핵심 슬라이스, P2 MVP 완성) 재조정(Claude 위임 결정). 1장 표기 규약, G-1, 2.3 검증 시점, 4.1 Must, 4.2 근거(2단계 행, Chrome 확장 행), 9장 일정·마일스톤(M1~M3 재정의, 기존 M3·M4 → M4·M5), PRD-R-1, PRD-R-2, 11.2 도메인 D-3 기한(M3 → M4). 세부 Task는 `docs/8-pan.md` v0.1.3 |
@@ -93,7 +94,7 @@
 | Could | Kakao·Naver OAuth, 드래그·리사이즈 편집, 원격 WING 셀렉터, Prompt Caching(Claude 전환 뒤), 가격·가이드 정적 페이지, PG 기반 작업 큐 |
 | Won't (이번 범위 아님) | 구독 플랜과 주기별 크레딧 소멸·상태 전이(BR-16, 17 중 구독 부분, BR-18), 환불(D-32), WING 등록 제출 자동화(D-23), 네이티브 모바일 앱 |
 
-M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs/8-pan.md` 참조). 우선순위 라벨(M/S/C)은 바뀌지 않는다.
+M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs/8-plan.md` 참조). 우선순위 라벨(M/S/C)은 바뀌지 않는다.
 
 ### 4.2 MVP 범위 결정 근거
 
@@ -228,7 +229,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 | NFR-04 | 성능 | 레이트 리밋 | 일반 API는 사용자당 60 req/min, 로그인은 IP당 10 req/min, 토큰 갱신(`/api/auth/refresh`)은 IP당 30 req/min. LLM은 FR-29 일일 상한 |
 | NFR-05 | 성능 | DB 커넥션 풀 | pg Pool `max=20`/프로세스(2개 합계 40, PG `max_connections` 100 이하). LLM 호출 동안 커넥션과 트랜잭션을 잡지 않는다(P-7). 쿼리 타임아웃 5초 |
 | NFR-06 | 성능 | 정적 자원 | 랜딩과 SPA 번들은 Express가 서빙하고 앞단 Cloudflare 프록시(무료 CDN 캐시)가 캐시한다. 랜딩 LCP 2.5초 이하 |
-| NFR-07 | 보안 | 비밀값 위치 | LLM·DB·PG 키는 백엔드 환경변수에만 둔다. 프론트 번들과 확장 패키지에서 `sk-`, `AIza`, `DATABASE_URL` 패턴 0건(BR-63, 71) |
+| NFR-07 | 보안 | 비밀값 위치 | LLM·DB·PG 키는 백엔드 환경변수에만 둔다. 프론트 번들과 확장 패키지에서 `sk-`, `AIza`, `postgresql://` 패턴 0건(BR-63, 71) |
 | NFR-08 | 보안 | 콘텐츠 보호 | 퍼블리시 전 모든 API 응답에 원본 이미지 경로, 최종 HTML, 공개 URL 0건. 워터마크 해제 파라미터 없음(BR-32, 50~54, 66) |
 | NFR-09 | 보안 | 토큰 | Access Token은 헤더로만 전송하므로 일반 API는 쿠키 기반 CSRF 대상이 아니다. Refresh Token 쿠키는 HttpOnly·Secure·SameSite=Strict·`Path=/api/auth`로 제한하고, `/api/auth/refresh`·`/logout`은 Origin 헤더를 검사한다. 프론트와 API가 단일 도메인·동일 출처라 CORS는 쓰지 않는다(Origin 검사는 유지). 토큰 문자열은 로그·URL에 남기지 않는다. JWT 비밀키는 NFR-07과 같이 백엔드 환경변수에만 둔다 |
 | NFR-10 | 보안 | LLM 출력 안전성 | 서버에서 script, 이벤트 핸들러 속성, `javascript:` URL을 제거. 프리뷰는 sandbox iframe으로 렌더링 |
@@ -264,7 +265,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 
 ### 7.2 백엔드 구조 (도메인 개념 대응)
 
-| 도메인 정의서 v0.3.8 | PRD(Express) |
+| 도메인 정의서 v0.3.9 | PRD(Express) |
 |---|---|
 | 인증 미들웨어 / 자격 검사(P-3) | `requireAuth`(Bearer JWT: Access Token 또는 확장 토큰, 인증만) + 자격 판정 함수 `assertEligible(user)`(FR-06). 프로젝트 대상 API는 서비스가 프로젝트 조회 직후, `POST /api/projects`는 라우트에서 호출한다 |
 | Routes(DG-3) | Express Router: `routes/auth`, `projects`, `analyze`, `generate`, `edit`, `publish` |
@@ -397,7 +398,7 @@ flowchart LR
 
 ## 9. 일정 (1인, P1 2일 + P2 5일)
 
-M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다(4.1, 4.2). Task 단위 배치·추정·선행은 `docs/8-pan.md` 7장을 따른다.
+M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다(4.1, 4.2). Task 단위 배치·추정·선행은 `docs/8-plan.md` 7장을 따른다.
 
 | 단계·구간 | 작업 | 완료 기준 |
 |---|---|---|
@@ -456,7 +457,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다(4.1, 4.2). Task
 
 | ID | 리스크 | 영향 | 대응 | 관련 |
 |---|---|---|---|---|
-| PRD-R-1 | 2일 일정 초과(M 추정 합계 49.5h > 16h) | 높음 | M을 P1(2일 핵심 슬라이스, 14h + 예비 2h)과 P2(MVP 완성, 5일)로 나눴다(4.2). P1은 반나절, P2는 하루 단위로 점검한다. P1이 밀리면 예비 시간 → 화면을 P2로 넘기고 API 스모크로 M2 판정 → M2 연기 순이며 불변식은 빼지 않는다. P2가 밀리면 분석(FR-12)을 먼저 뺀다(분석 생략 경로로 E2E 유지). 세부는 `docs/8-pan.md` 9.2 | 9장 |
+| PRD-R-1 | 2일 일정 초과(M 추정 합계 49.5h > 16h) | 높음 | M을 P1(2일 핵심 슬라이스, 14h + 예비 2h)과 P2(MVP 완성, 5일)로 나눴다(4.2). P1은 반나절, P2는 하루 단위로 점검한다. P1이 밀리면 예비 시간 → 화면을 P2로 넘기고 API 스모크로 M2 판정 → M2 연기 순이며 불변식은 빼지 않는다. P2가 밀리면 분석(FR-12)을 먼저 뺀다(분석 생략 경로로 E2E 유지). 세부는 `docs/8-plan.md` 9.2 | 9장 |
 | PRD-R-2 | WING 상세설명이 인라인 style, 특정 태그, 외부 이미지 URL을 제한 | 높음(최종 산출물 사용 불가) | P1 1일 차에 WING에 샘플 HTML을 수동으로 붙여 확인(PRD-V-7). 불가하면 출력 규격을 변경 | R-7, D-12, D-16, BR-30, BR-66, FR-14, FR-22 |
 | PRD-R-3 | LLM Provider 레이트 리밋이 1,000명 부하를 못 버팀 | 높음 | 세마포어·대기열·503, 계정 일일 상한. 유료 티어 한도를 사전에 확인 | R-8, BR-75, BR-76, NFR-03, FR-29 |
 | PRD-R-4 | 세마포어가 프로세스 단위라 수평 확장 시 전체 동시성이 늘어남 | 중 | 프로세스 수 × 한도로 설정. 인스턴스가 3대를 넘으면 PG 기반 작업 큐로 전환(C) | R-8, D-29, NFR-03 |

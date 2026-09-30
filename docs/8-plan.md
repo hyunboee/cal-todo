@@ -1,14 +1,14 @@
-# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.6 초안)
+# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.11 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 작업 실행 계획(WBS) |
-| 버전 | v0.1.6 (초안) |
+| 버전 | v0.1.11 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 문서 버전 | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.7, 아키텍처 v0.1.7, ERD v0.1.7, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
+| 기준 문서 버전 | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
 | 범위 | MVP(M) Task 분해·의존·일정. M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다. S/C는 8장에 요약 |
 
 ### 문서 변경 이력
@@ -18,6 +18,11 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.11 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | DB-01~03 구현 후속 정합화: DB-03(server.js 연결 이월 표기), BE-01a(기존 파일 확장, server.js 잡 시작·종료, 완료 조건 2개 추가), BE-09b(복원 통합 확인 완료 조건 1개 추가), OPS-02 비밀값 스캔 완료 조건(`postgresql://`) |
+| v0.1.10 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.8, 아키텍처 v0.1.8, ERD v0.1.8 | DB-01~DB-03 완료 조건 체크(backend 구현, `npm test` 25/25 통과, 라인 커버리지 98.53%). DB-03의 server.js 연결은 BE-01a로 이월 |
+| v0.1.9 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.8, 아키텍처 v0.1.8, ERD v0.1.8 | DB-01: Docker 대신 로컬 설치 PostgreSQL 17 서버에 테스트 DB `cal-todo-test`를 별도 생성(QA-02 v0.1.8과 일치) |
+| v0.1.8 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.7, 아키텍처 v0.1.7, ERD v0.1.7 | DB-01: 개발 DB를 빈 `cal-todo` DB로 변경해 착수 전 스키마 비우기 단계 삭제. `postgres` DB에 남은 테이블 정리 시 사용자 재확인 규칙 유지 |
+| v0.1.7 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.7, 아키텍처 v0.1.7, ERD v0.1.7 | DB-01 수행 작업에 착수 전 스키마 비우기(로컬 DB에 MCP로 직접 적용된 상태, 실행 전 사용자 재확인 필수) 추가 |
 | v0.1.6 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.7, 아키텍처 v0.1.7, ERD v0.1.7 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. DEC-05, 4장 BE-03b 행, 5장 그래프 노드, BE-03b(미들웨어 → `assertEligible`), BE-05a, BE-05b, BE-06, BE-09a, BE-11, BE-12, BE-13, BE-14a(402 선검사, 완료 조건 1개 추가), 7장 마일스톤의 P1 제외 목록 |
 | v0.1.5 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.7, PRD v0.3.6, 시나리오 v0.1.5, 와이어프레임 v0.1.5, 구조 원칙 v0.1.6, 아키텍처 v0.1.6, ERD v0.1.6 | 문서 간 정합성 재점검 반영: 3장 DEC-02·DEC-08 기한(옛 구간 표기 → 단계 표기), OPS-02 수행 작업, 9.2 순서 2·3(테스트 P1·P2 수식어). 기준 문서 버전 갱신 |
 | v0.1.4 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.6, PRD v0.3.5, 시나리오 v0.1.4, 와이어프레임 v0.1.4, 구조 원칙 v0.1.5, 아키텍처 v0.1.5, ERD v0.1.5 | 기준 문서 버전 갱신만 반영 |
@@ -94,9 +99,9 @@ P1 Task는 P1 Task만 선행으로 둔다(P2 역의존 없음). P2 Task의 선�
 
 | ID | 제목 | 단위 | 우선 | 단계 | 선행 | 구간 | 추정 | 상태 |
 |---|---|---|---|---|---|---|---|---|
-| DB-01 | 스키마 이관(001_init.sql)과 마이그레이션 스크립트 | DB | M | P1 | DEC-04(결정됨) | 1일 차 오전 | 1h | [ ] |
-| DB-02 | 운영자 크레딧 지급 스크립트 | DB | M | P1 | BE-01a | 1일 차 오전 | 0.5h | [ ] |
-| DB-03 | 주기 작업: 선점 만료 복원·refresh 만료 삭제·원장 대사 | DB | M | P2 | BE-09b | P2 3일 차 | 1h | [ ] |
+| DB-01 | 스키마 이관(001_init.sql)과 마이그레이션 스크립트 | DB | M | P1 | DEC-04(결정됨) | 1일 차 오전 | 1h | [x] |
+| DB-02 | 운영자 크레딧 지급 스크립트 | DB | M | P1 | BE-01a | 1일 차 오전 | 0.5h | [x] |
+| DB-03 | 주기 작업: 선점 만료 복원·refresh 만료 삭제·원장 대사 | DB | M | P2 | BE-09b | P2 3일 차 | 1h | [x] |
 | BE-01a | 백엔드 골격·설정·오류 처리·헬스체크 | BE | M | P1 | DB-01 | 1일 차 오전 | 1h | [ ] |
 | BE-01b | 요청 로그·종료 처리 | BE | M | P2 | BE-01a | P2 1일 차 | 0.5h | [ ] |
 | BE-02a | JWT 모듈·requireAuth | BE | M | P1 | BE-01a, DEC-03(결정됨) | 1일 차 오전 | 0.5h | [ ] |
@@ -299,18 +304,19 @@ flowchart LR
 - 선행: DEC-04(결정됨)
 - 관련: OP-10, NM-13, QA-02, PRD 7.4, ERD 4~6장, E-1
 - 수행 작업:
-  - 로컬 Docker로 PostgreSQL 17 개발 DB와 테스트 DB를 띄운다(QA-02).
+  - **개발 DB:** 로컬 PostgreSQL 17의 `cal-todo` DB를 쓴다(`backend/.env`의 `DB_CONN_STRING`). 빈 상태이므로 스키마 비우기 없이 바로 `migrate.js`로 적용한다. 참고로 `postgres` DB에는 postgres MCP로 직접 적용한 테이블 11개가 남아 있으며 앱은 쓰지 않는다. 이를 정리(삭제)하려면 DB를 지우는 작업이므로 **실행 직전에 반드시 사용자에게 한 번 더 확인받는다.**
+  - 같은 로컬 PostgreSQL 17 서버에 테스트 DB `cal-todo-test`를 별도로 만든다(QA-02). 개발 DB는 위의 `cal-todo`를 쓴다.
   - `backend/package.json` 생성(`pg` 의존성).
   - **이미 작성·검증된 `docs/schema.sql`을 그대로 옮겨** `backend/migrations/001_init.sql`을 만든다. `migrate.js`가 파일마다 TX로 감싸므로 `BEGIN;`·`COMMIT;` 두 줄만 뺀다. DEC-04(카운트 CHECK는 `>= 0` 하한만)는 `docs/schema.sql`에 이미 반영돼 있으므로 DDL은 바꾸지 않는다.
   - `backend/scripts/migrate.js`(pg만 사용): `schema_migrations` 테이블 생성, 미적용 파일을 이름순으로 파일마다 TX 실행·기록, 전진만.
 - 완료 조건:
-  - [ ] 빈 PG 17에서 `node --env-file=.env scripts/migrate.js` 실행 → 11개 테이블 + `schema_migrations` 생성
-  - [ ] 두 번째 실행 시 적용 0건, 오류 없음
-  - [ ] 오류가 있는 테스트용 SQL 파일 → 해당 파일 롤백, `schema_migrations` 미기록
-  - [ ] `001_init.sql`과 `docs/schema.sql`의 diff가 `BEGIN`/`COMMIT`뿐
-  - [ ] `credit_ledger_project_deduct_uq` 부분 유니크, `credit_wallets` CHECK(≥ 0) 존재(`\d` 확인)
-  - [ ] `projects` 카운트 CHECK 4개가 `>= 0` 하한만(상한 값 3, 6이 DDL에 없음, DEC-04)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] 빈 PG 17에서 `node --env-file=.env scripts/migrate.js` 실행 → 11개 테이블 + `schema_migrations` 생성
+  - [x] 두 번째 실행 시 적용 0건, 오류 없음
+  - [x] 오류가 있는 테스트용 SQL 파일 → 해당 파일 롤백, `schema_migrations` 미기록
+  - [x] `001_init.sql`과 `docs/schema.sql`의 diff가 `BEGIN`/`COMMIT`뿐
+  - [x] `credit_ledger_project_deduct_uq` 부분 유니크, `credit_wallets` CHECK(≥ 0) 존재(`\d` 확인)
+  - [x] `projects` 카운트 CHECK 4개가 `>= 0` 하한만(상한 값 3, 6이 DDL에 없음, DEC-04)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### DB-02 운영자 크레딧 지급 스크립트
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 1일 차 오전
@@ -320,10 +326,10 @@ flowchart LR
   - `services/credits.js`에 지급 함수: `withTx` 안에서 원장 INSERT(`reason=PURCHASE, source=TOPUP, pg_tx_id=NULL, delta=n`) → `topup_balance += n` → `email_verified=true`.
   - `scripts/grant.js <email> <n>`: 인자 검증(n 양의 정수) 후 서비스 함수 호출. 직접 SQL 없음(OP-14).
 - 완료 조건:
-  - [ ] [P1] 지급 후 잔액 = 원장 합계(AC-BR15)
-  - [ ] 원장 행 `reason=PURCHASE, source=TOPUP, pg_tx_id IS NULL`, 사용자 `email_verified=true`
-  - [ ] 없는 이메일 → 원장·잔액 변화 0건, 종료 코드 ≠ 0
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P1] 지급 후 잔액 = 원장 합계(AC-BR15)
+  - [x] 원장 행 `reason=PURCHASE, source=TOPUP, pg_tx_id IS NULL`, 사용자 `email_verified=true`
+  - [x] 없는 이메일 → 원장·잔액 변화 0건, 종료 코드 ≠ 0
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### DB-03 주기 작업: 선점 만료 복원·refresh 만료 삭제·원장 대사
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 3일 차
@@ -332,14 +338,14 @@ flowchart LR
 - 수행 작업:
   - `jobs/index.js` 1분 주기: `active_job_started_at < now() - 5분`(D-30) 행을 `active_job_type`별로 복원(ERD 6장 표: ANALYZE는 카운트 유지, GENERATE는 표시만 해제, REGEN은 `regen_count - 1`)하고 작업 표시 해제. 조건부 UPDATE로 멱등.
   - 1일 주기: 만료 `refresh_tokens` 삭제, 원장 대사(잔액 ≠ 원장 합계 건수) 불일치 시 `level=error` 로그.
-  - `server.js`에서 시작, SIGTERM에서 해제.
+  - `server.js`에서 시작, SIGTERM에서 해제(BE-01a로 이월, `startJobs`/`stopJobs`만 제공).
 - 완료 조건:
-  - [ ] [P1] AC-BR47: `active_job_started_at`을 5분 전으로 둔 REGEN 행 → job 1회 → `regen_count - 1`, `active_job_type IS NULL`
-  - [ ] ANALYZE 행은 `analyze_count` 유지, 표시만 해제(BR-26)
-  - [ ] job 2회 동시 실행해도 `regen_count`는 1만 감소(PM2 2프로세스 안전)
-  - [ ] 만료 refresh 행만 삭제, 유효 행 유지
-  - [ ] 잔액을 일부러 어긋나게 한 행 → error 로그 1줄(NFR-14)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P1] AC-BR47: `active_job_started_at`을 5분 전으로 둔 REGEN 행 → job 1회 → `regen_count - 1`, `active_job_type IS NULL`
+  - [x] ANALYZE 행은 `analyze_count` 유지, 표시만 해제(BR-26)
+  - [x] job 2회 동시 실행해도 `regen_count`는 1만 감소(PM2 2프로세스 안전)
+  - [x] 만료 refresh 행만 삭제, 유효 행 유지
+  - [x] 잔액을 일부러 어긋나게 한 행 → error 로그 1줄(NFR-14)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 ### 6.2 BE
 
@@ -348,13 +354,17 @@ flowchart LR
 - 선행: DB-01
 - 관련: NFR-05, NFR-07, NFR-12, NFR-18, OP-01, OP-02, OP-08, OP-12, LY-01~05, NM-11, QA-01, PP-09
 - 수행 작업:
-  - 의존성 `express`, `pg`, `jsonwebtoken`, `bcrypt`, `cookie-parser`(PRD 7.1). `start`·`test` 스크립트.
-  - `config.js`: 필수 변수·JWT 키 32바이트 검사 후 실패 시 즉시 종료, D 수치 상수와 D-ID 주석. LLM·스토리지 키는 백엔드 환경변수에서만 읽는다(NFR-07).
-  - `db.js`: Pool `max=20`, `statement_timeout` 5초, `query`, `withTx`.
+  - DB-01~02가 이미 만든 `package.json`·`src/config.js`·`src/db.js`를 확장한다(새로 만들지 않음).
+  - 의존성 `express`, `pg`, `jsonwebtoken`, `bcrypt`, `cookie-parser`(PRD 7.1) 추가. `start` 스크립트 추가(`test`는 이미 있음).
+  - `config.js`(확장): 필수 변수·JWT 키 32바이트 검사 후 실패 시 즉시 종료, D 수치 상수와 D-ID 주석. LLM·스토리지 키는 백엔드 환경변수에서만 읽는다(NFR-07).
+  - `db.js`(확장): Pool `max=20`, `statement_timeout` 5초, `query`, `withTx`는 DB-01~02에서 구현됨.
   - `lib/errors.js`(AppError), 미들웨어 `error-handler`. CORS 미들웨어는 두지 않는다(단일 도메인·동일 출처, DEC-02).
   - `app.js`(LY-05 순서 조립) / `server.js`(listen), `GET /healthz`.
+  - `server.js`: listen 뒤 `startJobs()`, SIGTERM 시 `stopJobs()` 후 서버 종료(DB-03에서 이월).
   - `.env.example`(6.1절 M 키), `.gitignore`.
 - 완료 조건:
+  - [ ] `npm run dev`로 서버 기동, `src` 파일 수정 시 자동 재시작
+  - [ ] 서버 시작 시 `startJobs()` 호출, SIGTERM 시 `stopJobs()` 후 정상 종료
   - [ ] `npm test`: `app.listen(0)` 기반 `/healthz` 200, DB 중단 시 503
   - [ ] `JWT_ACCESS_SECRET` 31바이트로 시작 → 즉시 종료
   - [ ] 없는 경로 404 `{error:{code:"NOT_FOUND"}}`, 처리되지 않은 오류 500 `INTERNAL`(스택 미노출)
@@ -564,6 +574,7 @@ flowchart LR
   - [ ] 이미지 0장 → 400, LLM 호출 0회(AC-BR35)
   - [ ] mock 실패(502 `UPSTREAM_FAILED`)·503 → `active_job_type IS NULL`, status·version 불변
   - [ ] LLM 대기 중 version을 바꾸면 결과 폐기·작업 해제(FR-34)
+  - [ ] 실제 선점 경로로 만든 진행 중 작업이 D-30 경과 후 `releaseExpiredJobs`(DB-03)로 복원됨(통합 확인)
   - [ ] 구조 원칙 5.3 DoD 충족
 
 #### BE-10a 서버 프리뷰 합성(워터마크)
@@ -919,7 +930,7 @@ flowchart LR
   - [ ] PRD-V-5: k6 1,000 VU p95 ≤ 300ms, 오류율 < 1%
   - [ ] PRD-V-6: mock 동시 200건 → 초과분 503 + `Retry-After`, 서버 다운 0회, 종료 후 `active_job_type IS NOT NULL` 행 0건
   - [ ] PRD-V-7: 운영에서 퍼블리시한 최종 HTML을 WING 상세설명에 붙여 스타일·이미지 정상(1회 이상). 인라인 style이나 외부 이미지가 막히면 D-16/D-12 재결정(DEC-06)
-  - [ ] [P2] `frontend/dist`에서 `sk-`·`AIza`·`DATABASE_URL` 0건(NFR-07)
+  - [ ] [P2] `frontend/dist`에서 `sk-`·`AIza`·`postgresql://` 0건(NFR-07)
   - [ ] 랜딩 LCP ≤ 2.5초(NFR-06)
 
 ---

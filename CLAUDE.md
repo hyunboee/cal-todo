@@ -17,7 +17,7 @@
 | [docs/5-project-principle.md](docs/5-project-principle.md) | 프로젝트 구조 설계 원칙: 공통 원칙(PP), 의존성·레이어(LY), 코드·네이밍(NM), 테스트·품질(QA), 설정·보안·운영(OP), 프론트엔드·백엔드·확장 디렉토리 구조 |
 | [docs/6-arch-diagram.md](docs/6-arch-diagram.md) | 기술 아키텍처 다이어그램: 전체 구성도와 복잡 로직(퍼블리시 TX, JWT 회전, 상태 전이, LLM 작업 처리, 콘텐츠 보호) Mermaid 다이어그램 |
 | [docs/7-erd.md](docs/7-erd.md) | ERD: MVP·S/W 단계 테이블 관계도, 테이블 정의, 제약·인덱스, 상태·열거 값, 문서 대조 결과 |
-| [docs/8-pan.md](docs/8-pan.md) | 실행 계획(WBS): DB·BE·FE Task 분해(수행 작업, 체크박스 완료 조건, 선행 Task), 결정 Task(DEC), P1(2일 핵심 슬라이스)·P2(MVP 완성) 일정과 마일스톤 |
+| [docs/8-plan.md](docs/8-plan.md) | 실행 계획(WBS): DB·BE·FE Task 분해(수행 작업, 체크박스 완료 조건, 선행 Task), 결정 Task(DEC), P1(2일 핵심 슬라이스)·P2(MVP 완성) 일정과 마일스톤 |
 | [backend/swagger.yaml](backend/swagger.yaml) | API 명세(OpenAPI 3.0.3): PRD 8장 엔드포인트 27개, 인증 스킴(Access Token·확장 토큰·Refresh 쿠키), 요청·응답 스키마, 공통 오류 응답 |
 
 # 코딩 행동 지침

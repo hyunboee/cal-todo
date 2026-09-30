@@ -1,16 +1,16 @@
-# Coupang AI Detail Maker - 프로젝트 구조 설계 원칙 (v0.1.7 초안)
+# Coupang AI Detail Maker - 프로젝트 구조 설계 원칙 (v0.1.9 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 프로젝트 구조 설계 원칙 |
-| 버전 | v0.1.7 (초안) |
+| 버전 | v0.1.9 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.8 (`docs/1-domain-definition.md`) |
-| 기준 PRD 버전 | v0.3.7 (`docs/2-PRD.md`) |
-| 참고 | `docs/3-user-scenario.md` v0.1.6, `docs/4-wireframes.md` v0.1.6, `CLAUDE.md`(오버엔지니어링 금지, 단순함 우선) |
+| 기준 도메인 정의서 버전 | v0.3.9 (`docs/1-domain-definition.md`) |
+| 기준 PRD 버전 | v0.3.8 (`docs/2-PRD.md`) |
+| 참고 | `docs/3-user-scenario.md` v0.1.7, `docs/4-wireframes.md` v0.1.7, `CLAUDE.md`(오버엔지니어링 금지, 단순함 우선) |
 | 범위 | 레이어·의존 방향, 네이밍, 테스트, 설정·보안·운영, 디렉토리 구조. 기능 명세는 PRD를 따른다 |
 
 **표기 규약**
@@ -25,6 +25,8 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 | 기준 PRD | 변경내용 |
 |---|---|---|---|---|---|
+| v0.1.9 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | v0.3.8 | DB-01~03 구현 후속 정합화: 6.1 환경변수(`DATABASE_URL` → `DB_CONN_STRING`, `.env.test`, 작업 주기 선택 키 2개), 5.2 비밀값 스캔 행(P2, `postgresql://`) |
+| v0.1.8 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | v0.3.7 | QA-02: 테스트 DB 위치를 로컬 Docker에서 로컬 설치 PostgreSQL 17 서버로 변경 |
 | v0.1.7 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | v0.3.7 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. LY-05, LY-06, 허용/금지 의존 표(middleware), 4.3 용어(사용 자격), 7.3 디렉토리(middleware, services), 8.1 체크리스트, 8.2 C-5·C-9 |
 | v0.1.6 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.7 | v0.3.6 | 문서 간 정합성 재점검 반영: PP-01, QA-05(2일 → MVP 일정), LY-06(자격 검사 대상 8종 → 9종, 폼 저장 추가, DEC-05) |
 | v0.1.5 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.6 | v0.3.5 | 5.x 테스트 배치 문단을 단계 P1/P2 구조에 맞춤(테스트 우선순위 P0~P2와 단계 P1·P2 용어 구분) |
@@ -211,7 +213,7 @@ pages → components → hooks(TanStack Query) → api(client)
 | ID | 원칙 | 이유 |
 |---|---|---|
 | QA-01 | 백엔드 테스트는 Node 내장 `node:test` + `node:assert`, HTTP는 `app.listen(0)` + 내장 `fetch` | 추가 의존성 0. `app.js`(조립)와 `server.js`(listen)를 나눠 테스트가 app을 직접 띄운다 |
-| QA-02 | DB는 mock하지 않고 실제 PostgreSQL 17(로컬 Docker)의 테스트 DB를 쓴다. 각 테스트 파일은 필요한 행을 직접 INSERT하고 끝나면 TRUNCATE | 동시성·제약·TX가 핵심이라 mock으로는 검증되지 않는다(P-5) |
+| QA-02 | DB는 mock하지 않고 실제 PostgreSQL 17(로컬 설치 서버)의 테스트 DB를 쓴다. 각 테스트 파일은 필요한 행을 직접 INSERT하고 끝나면 TRUNCATE | 동시성·제약·TX가 핵심이라 mock으로는 검증되지 않는다(P-5) |
 | QA-03 | **LLM mock은 어댑터 경계에서만.** `LLM_MAIN=mock:ok`처럼 provider `mock`을 두어 고정 HTML·지연·실패를 흉내 낸다. 서비스 코드에 테스트 분기를 넣지 않는다 | FR-27, PRD-V-6. 테스트와 부하 테스트가 같은 경로를 쓴다 |
 | QA-04 | 크롤러·스토리지는 모듈 경계(`lib/crawler.js`, `lib/storage.js`)에서 테스트용 대체 함수를 주입한다(모듈 export 교체). 외부 네트워크를 테스트에서 호출하지 않는다 | - |
 | QA-05 | 프론트 자동 테스트는 MVP에서 두지 않는다. `tsc --noEmit`과 E2E 수동 확인(PRD-V-1)으로 대신한다. FR-40 갱신 단일화는 `JWT_ACCESS_TTL_SEC=30`으로 줄여 수동 확인한다 | MVP 일정(P1 2일 + P2 5일), 신규 러너 추가 회피 |
@@ -237,9 +239,9 @@ pages → components → hooks(TanStack Query) → api(client)
 | P1 | 선점 만료 | `active_job_started_at`을 5분 전으로 둔 뒤 job 1회 실행 → 복원·해제 | AC-BR47 |
 | P1 | 가입·지급 | 가입 시 Wallet(0) 1건, grant 후 잔액 = 원장 합계 | AC-BR05, FR-07, BR-15 |
 | P2 | 크롤링 원문 | 알려진 리뷰 문장이 DB·로그에 0건 | AC-BR22 |
-| P2 | 비밀값 스캔 | `frontend/dist`, `extension/`에서 `sk-`, `AIza`, `DATABASE_URL` 0건(grep 한 줄) | NFR-07, AC-BR63, AC-BR71 |
+| P2 | 비밀값 스캔 | `frontend/dist`, `extension/`에서 `sk-`, `AIza`, `postgresql://` 0건(grep 한 줄) | NFR-07, AC-BR63, AC-BR71 |
 
-**테스트 배치** (여기의 P0·P1·P2는 테스트 우선순위이며 8-pan의 단계 P1·P2와 다르다): P0 테스트는 해당 기능을 만든 Task에서 바로 쓴다(단계 P1에 있는 퍼블리시 TX·유출 차단은 P1 안에서). 테스트 우선순위 P1·P2는 단계 P2의 배포 직전(OPS-02)에 한 번. 밀리면 테스트 P2 → P1 순으로 뒤로 미루고 P0는 넘기지 않는다(PRD-R-1).
+**테스트 배치** (여기의 P0·P1·P2는 테스트 우선순위이며 8-plan의 단계 P1·P2와 다르다): P0 테스트는 해당 기능을 만든 Task에서 바로 쓴다(단계 P1에 있는 퍼블리시 TX·유출 차단은 P1 안에서). 테스트 우선순위 P1·P2는 단계 P2의 배포 직전(OPS-02)에 한 번. 밀리면 테스트 P2 → P1 순으로 뒤로 미루고 P0는 넘기지 않는다(PRD-R-1).
 
 ### 5.3 Definition of Done (기능 1건)
 
@@ -259,7 +261,10 @@ pages → components → hooks(TanStack Query) → api(client)
 | 변수 | 용도 | 비고 |
 |---|---|---|
 | `NODE_ENV`, `PORT` | 실행 환경 | |
-| `DATABASE_URL` | pg Pool 접속 | |
+| `DB_CONN_STRING` | pg Pool 접속 | |
+| `.env.test`의 `DB_CONN_STRING` | 테스트 DB 접속. 같은 키에 값은 `cal-todo-test` DB | QA-02, gitignore 대상 |
+| `JOB_RESERVATION_INTERVAL_MS` | 선점 만료 복원 작업 주기. 선택, 기본 60000 | D-30 |
+| `JOB_DAILY_INTERVAL_MS` | 일 단위 작업 주기. 선택, 기본 86400000 | |
 | `FRONTEND_ORIGIN` | Origin 검사 대상 1개(서비스 도메인, CORS는 쓰지 않음) | NFR-09 |
 | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | 서로 다른 32바이트 이상 난수 | PRD 5.8 |
 | `JWT_EXT_SECRET` | 확장 토큰 서명 (S) | FR-24 |
