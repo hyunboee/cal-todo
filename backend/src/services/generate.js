@@ -27,9 +27,14 @@ function buildPrompt(form, usps, assetIds) {
   const lines = [`제품명: ${t('productName')}`, `카테고리: ${t('category')}`, `소개: ${t('intro')}`]
   if (t('toneGuide')) lines.push(`톤 가이드: ${t('toneGuide')}`)
   if (usps.length) lines.push(`강조할 USP: ${usps.join(', ')}`) // BR-25: 빈 배열이면 분석 생략
-  lines.push(`사용할 이미지(각각 <img src="asset:ID">로 배치): ${assetIds.map((id) => `asset:${id}`).join(', ')}`)
+  // LLM이 긴 uuid를 옮겨 적다 틀리므로 짧은 번호를 주고 응답에서 되돌린다(restoreAssetRefs)
+  lines.push(`사용할 이미지(각각 <img src="asset:번호">로 배치): ${assetIds.map((_, i) => `asset:${i + 1}`).join(', ')}`)
   return lines.join('\n')
 }
+
+// asset:번호 → asset:uuid. 없는 번호는 그대로 두어 정제에서 제거된다(BR-32)
+const restoreAssetRefs = (text, assetIds) =>
+  text.replace(/asset:(\d+)\b/g, (m, n) => (assetIds[n - 1] ? `asset:${assetIds[n - 1]}` : m))
 
 const stripFence = (text) => text.replace(/^\s*```(?:html)?\s*/i, '').replace(/\s*```\s*$/, '')
 
@@ -43,7 +48,7 @@ async function runReserved(row, userId, version, type, assetIds) {
   try {
     const prompt = buildPrompt(row.form, row.selected_usps, assetIds)
     const { text } = await callRole('MAIN', { system: SYSTEM, prompt }, { userId, projectId: row.id })
-    draft = sanitizeHtml(stripFence(text)) // LY-18, BR-30
+    draft = sanitizeHtml(restoreAssetRefs(stripFence(text), assetIds)) // LY-18, BR-30
   } catch (e) {
     await releaseJob(row.id, type, restore) // BR-47: 502·503·429는 해제
     throw e

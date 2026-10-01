@@ -152,3 +152,14 @@ test('BE-09a 추가: ANALYZED + selectedUsps 있는 프로젝트도 GENERATED', 
   assert.equal((await generateViaApi(base, u.token, id, 1)).status, 200)
   assert.equal((await row(id)).status, 'GENERATED')
 })
+
+test('이미지는 asset:번호로 넘기고 응답에서 asset:uuid로 되돌린다(mock은 프롬프트의 참조를 그대로 배치)', async () => {
+  const u = await createUser()
+  const id = await withImage(u)
+  assert.equal((await upload(base, u.token, id, PNG)).status, 201)
+  const ids = (await pool.query('SELECT id FROM assets WHERE project_id = $1', [id])).rows.map((a) => a.id)
+  const r = await generateViaApi(base, u.token, id, 1)
+  assert.equal(r.status, 200, r.text)
+  const srcs = cheerio.load((await row(id)).draft_html, null, false)('img').toArray().map((i) => i.attribs.src)
+  assert.deepEqual(srcs.sort(), ids.map((a) => `asset:${a}`).sort())
+})

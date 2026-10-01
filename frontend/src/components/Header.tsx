@@ -1,4 +1,3 @@
-import { Link } from 'react-router'
 import { useLogout, useMe } from '../hooks/auth.ts'
 import styles from './Header.module.css'
 
@@ -18,9 +17,10 @@ export function Header() {
   )
   return (
     <header className={styles.header}>
-      <Link to="/app" className={styles.logo}>
+      {/* 정적 랜딩(/)은 SPA 밖 페이지라 Link가 아닌 a로 이동 */}
+      <a href="/" className={styles.logo}>
         <span className={styles.mark}>C</span>Detail Maker
-      </Link>
+      </a>
       <span className={styles.spacer} />
       {me && (
         <span className={`${styles.balance} ${low ? styles.low : ''}`}>

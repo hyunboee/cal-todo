@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { SyntheticEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { useLogin, useSignup } from '../hooks/auth.ts'
 import { messageOf } from '../messages.ts'
 import { useAuthStore } from '../stores/auth.ts'
 import styles from './LoginPage.module.css'
+
+const inPopup = window.self !== window.top
 
 export function LoginPage() {
   const token = useAuthStore((s) => s.accessToken)
@@ -16,11 +18,16 @@ export function LoginPage() {
   const signup = useSignup()
   const m = mode === 'login' ? login : signup
 
-  if (token) return <Navigate to="/app" replace />
+  // 랜딩의 로그인 팝업(iframe) 안이면 창 전체를 /app으로 옮긴다. 토큰은 /app 시작 시 refresh로 복원
+  useEffect(() => {
+    if (token && inPopup) window.top!.location.assign('/app')
+  }, [token])
+
+  if (token) return inPopup ? null : <Navigate to="/app" replace />
 
   const submit = (ev: SyntheticEvent) => {
     ev.preventDefault()
-    m.mutate({ email, password }, { onSuccess: () => void navigate('/app', { replace: true }) })
+    m.mutate({ email, password }, { onSuccess: () => { if (!inPopup) void navigate('/app', { replace: true }) } })
   }
   const errorText = m.error
     ? messageOf(m.error, {
@@ -29,7 +36,7 @@ export function LoginPage() {
     : null
 
   return (
-    <main className={styles.wrap}>
+    <main className={inPopup ? `${styles.wrap} ${styles.popup}` : styles.wrap}>
       <form className={`card ${styles.card}`} onSubmit={submit}>
         <div className={styles.tabs}>
           <button type="button" className="btn-secondary" aria-pressed={mode === 'login'} onClick={() => setMode('login')}>

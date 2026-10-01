@@ -1,11 +1,11 @@
-# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.22 초안)
+# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.23 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 작업 실행 계획(WBS) |
-| 버전 | v0.1.22 (초안) |
+| 버전 | v0.1.23 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
 | 기준 문서 버전 | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
@@ -18,6 +18,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.23 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-06·07·08a·08b·09 완료 조건 체크, FE-10은 Safari 확인 1개 제외 체크(Chrome·Edge 360/768/1280 가로 스크롤 0), OPS-02는 로컬 충족 2개(PRD-V-4, dist 비밀값 0건) 체크. OPS-01 코드 부분(정적 서빙·SPA 폴백, Dockerfile, PM2 2프로세스)과 k6 스크립트 2개는 작성했으나 운영 인프라·docker·k6 미설치로 해당 완료 조건은 미충족. `node --test` 프론트 151/151, 백엔드 174/174 |
 | v0.1.22 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-02a~FE-05b 완료 조건 체크(29개, `[x]` 172개). `tsc --noEmit`·`npm run build` 통과, `node --test` 100/100(라인 커버리지 100%), 수동 조건은 브라우저 E2E로 확인(JWT_ACCESS_TTL_SEC=30 동시 5건 refresh 1회, `rt` 삭제, 업로드 3장·11장, 연속 저장, 상태별 이동, mock delay·fail, 503 자동 재시도) |
 | v0.1.21 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-01a·FE-01b 완료 조건 체크(7개, `[x]` 143개). `tsc --noEmit` 통과, `npm run build` → `dist/index.html`·`dist/app/index.html`(noindex), 개발 서버 `/api` 프록시 401 전달 확인. 순수 TS 모듈(stores, queryClient)은 `node --test` 18/18, 라인 커버리지 100%(새 의존성 없음, QA-05 외 추가) |
 | v0.1.20 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리(체크박스 변경 없음, `[x]` 136개 유지): 3장 DEC-10, BE-08b(429 초기화 시각 문구) |
@@ -147,11 +148,11 @@ P1 Task는 P1 Task만 선행으로 둔다(P2 역의존 없음). P2 Task의 선�
 | FE-04b | WF-03 목록, WF-04 업로드·폼 재저장 | FE | M | P2 | FE-04a, FE-03b, BE-05b, BE-06 | P2 2일 차 | 1.5h | [x] |
 | FE-05a | WF-06 에디터: 프리뷰·생성(기본) | FE | M | P1 | FE-04a, BE-10a | 2일 차 오후 | 1h | [x] |
 | FE-05b | WF-06 에디터: 진행·실패·재시도 상태 | FE | M | P2 | FE-05a, FE-04b, BE-10b | P2 3일 차 | 1.5h | [x] |
-| FE-06 | WF-06 에디터: 블록 편집·재생성 | FE | M | P2 | FE-05b, BE-11, BE-12, DEC-08(결정됨) | P2 4일 차 | 2h | [ ] |
-| FE-07 | WF-05 경쟁사 분석·USP 선택 | FE | M | P2 | FE-04b, BE-13 | P2 4일 차 | 1.5h | [ ] |
-| FE-08a | WF-07 퍼블리시 확인, WF-08 최종 HTML·복사(기본) | FE | M | P1 | FE-05a, BE-14a | 2일 차 오후 | 0.5h | [ ] |
-| FE-08b | WF-07 오류 처리, WF-08 안내·재열람 | FE | M | P2 | FE-08a, FE-05b, BE-14b | P2 3일 차 | 1.5h | [ ] |
-| FE-09 | WF-01 정적 랜딩·robots·sitemap | FE | M | P2 | FE-01b | P2 4일 차 | 1h | [ ] |
+| FE-06 | WF-06 에디터: 블록 편집·재생성 | FE | M | P2 | FE-05b, BE-11, BE-12, DEC-08(결정됨) | P2 4일 차 | 2h | [x] |
+| FE-07 | WF-05 경쟁사 분석·USP 선택 | FE | M | P2 | FE-04b, BE-13 | P2 4일 차 | 1.5h | [x] |
+| FE-08a | WF-07 퍼블리시 확인, WF-08 최종 HTML·복사(기본) | FE | M | P1 | FE-05a, BE-14a | 2일 차 오후 | 0.5h | [x] |
+| FE-08b | WF-07 오류 처리, WF-08 안내·재열람 | FE | M | P2 | FE-08a, FE-05b, BE-14b | P2 3일 차 | 1.5h | [x] |
+| FE-09 | WF-01 정적 랜딩·robots·sitemap | FE | M | P2 | FE-01b | P2 4일 차 | 1h | [x] |
 | FE-10 | 반응형 레이아웃 | FE | M | P2 | FE-06, FE-07 | P2 4일 차 | 1h | [ ] |
 | OPS-01 | 배포 | OPS | M | P2 | DEC-02(결정됨), DB-03, BE-01b, BE-02b, BE-15, FE-08b, FE-09, FE-10 | P2 5일 차 | 2h | [ ] |
 | OPS-02 | MVP 검증(PRD-V-1~7) | OPS | M | P2 | OPS-01 | P2 5일 차 | 3h | [ ] |
@@ -838,11 +839,11 @@ flowchart LR
 - 수행 작업:
   - 우측 패널 목록에서 블록·필드 선택(프리뷰 응답의 `blocks`, iframe 안 클릭 선택 없음), 텍스트 편집·저장(`{blockId, editId, text, version}`, DEC-08), 재생성 버튼(남은 횟수 = 3 − regenCount), 409 → 프로젝트·프리뷰 재조회, 429 토스트, 재생성 시 편집 초기화 안내.
 - 완료 조건:
-  - [ ] 패널 목록의 블록·필드에 현재 텍스트가 채워지고, 저장 → 새 프리뷰에 반영, version +1 표시(US-13)
-  - [ ] 두 탭에서 같은 version 저장 → 늦은 탭 409 후 최신 프리뷰로 갱신
-  - [ ] 재생성 3회 후 버튼 비활성, 남은 0/3(AC-BR34)
-  - [ ] 태그 포함 저장 → 400 오류 표시, 프리뷰 불변
-  - [ ] `tsc --noEmit` 통과
+  - [x] 패널 목록의 블록·필드에 현재 텍스트가 채워지고, 저장 → 새 프리뷰에 반영, version +1 표시(US-13)
+  - [x] 두 탭에서 같은 version 저장 → 늦은 탭 409 후 최신 프리뷰로 갱신
+  - [x] 재생성 3회 후 버튼 비활성, 남은 0/3(AC-BR34)
+  - [x] 태그 포함 저장 → 400 오류 표시, 프리뷰 불변
+  - [x] `tsc --noEmit` 통과
 
 #### FE-07 WF-05 경쟁사 분석·USP 선택
 - 우선순위: M · 단계: P2 · 추정: 1.5h · 구간: P2 4일 차
@@ -851,10 +852,10 @@ flowchart LR
 - 수행 작업:
   - URL 입력, 분석 요청(시도 n/3 = analyzeCount), USP 후보 선택·저장, 분석 생략 링크, 크롤링 실패 시 분석 생략 안내.
 - 완료 조건:
-  - [ ] **P2 4일 차 완료 기준**: 분석 → USP 선택 → 생성 → 편집이 화면에서 끝까지 동작
-  - [ ] 3회 소진 후 분석 버튼 비활성, 429 안내
-  - [ ] URL 형식 오류 → 400 표시, 시도 횟수 불변
-  - [ ] `tsc --noEmit` 통과
+  - [x] **P2 4일 차 완료 기준**: 분석 → USP 선택 → 생성 → 편집이 화면에서 끝까지 동작
+  - [x] 3회 소진 후 분석 버튼 비활성, 429 안내
+  - [x] URL 형식 오류 → 400 표시, 시도 횟수 불변
+  - [x] `tsc --noEmit` 통과
 
 #### FE-08a WF-07 퍼블리시 확인, WF-08 최종 HTML·복사(기본)
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 2일 차 오후 (FE-08 2h 중 0.5h)
@@ -864,9 +865,9 @@ flowchart LR
   - `PublishModal`: 크레딧 1 차감 확인, 처리 중 버튼 비활성, 오류 코드 표시.
   - `FinalPage`: 읽기 전용 최종 HTML(`GET /final`), `navigator.clipboard` 복사.
 - 완료 조건:
-  - [ ] 퍼블리시 확정 → WF-08, `GET /api/me` 잔액 −1(US-14)
-  - [ ] 복사한 클립보드 내용 = `GET /final` 응답, 잔액 불변, 재복사 가능(FR-23)
-  - [ ] `tsc --noEmit` 통과
+  - [x] 퍼블리시 확정 → WF-08, `GET /api/me` 잔액 −1(US-14)
+  - [x] 복사한 클립보드 내용 = `GET /final` 응답, 잔액 불변, 재복사 가능(FR-23)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-08b WF-07 오류 처리, WF-08 안내·재열람
 - 우선순위: M · 단계: P2 · 추정: 1.5h · 구간: P2 3일 차 (FE-08 2h 중 1.5h)
@@ -876,11 +877,11 @@ flowchart LR
   - `PublishModal`: 잔액 변화 안내, 402·403·409·503 처리.
   - `FinalPage`: 복사 토스트, WING 붙여넣기 안내 3단계, 미퍼블리시 접근 403 → 이동. 단일 열(반응형 포함).
 - 완료 조건:
-  - [ ] 퍼블리시 확정 → 헤더 잔액 −1(US-14)
-  - [ ] 확정 버튼 빠른 2회 클릭 → 요청 1회
-  - [ ] 목록에서 PUBLISHED 열기 → WF-08, 편집 UI 없음(US-16, FR-20)
-  - [ ] 잔액 0에서도 WF-08 열람·복사(AC-BR10)
-  - [ ] `tsc --noEmit` 통과
+  - [x] 퍼블리시 확정 → 헤더 잔액 −1(US-14)
+  - [x] 확정 버튼 빠른 2회 클릭 → 요청 1회
+  - [x] 목록에서 PUBLISHED 열기 → WF-08, 편집 UI 없음(US-16, FR-20)
+  - [x] 잔액 0에서도 WF-08 열람·복사(AC-BR10)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-09 WF-01 정적 랜딩·robots·sitemap
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 4일 차
@@ -890,11 +891,11 @@ flowchart LR
   - `frontend/index.html`: React 없는 HTML/CSS, title·description·본문, CTA → `/app/login`(시안 `TEST_IMAGES/` 참고, 카피는 N-1 미정).
   - `public/robots.txt`(`Disallow: /app`), `public/sitemap.xml`(`/`).
 - 완료 조건:
-  - [ ] AC-BR80: JS 비활성으로 `/` 열기 → 본문·title·description 표시
-  - [ ] AC-BR81: robots.txt에 `Disallow: /app`
-  - [ ] AC-BR82: sitemap.xml에 `/` 포함
-  - [ ] `dist/index.html`에 `<script>` 0개(LY-13)
-  - [ ] `tsc --noEmit` 통과
+  - [x] AC-BR80: JS 비활성으로 `/` 열기 → 본문·title·description 표시
+  - [x] AC-BR81: robots.txt에 `Disallow: /app`
+  - [x] AC-BR82: sitemap.xml에 `/` 포함
+  - [x] `dist/index.html`에 `<script>` 0개(LY-13)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-10 반응형 레이아웃
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 4일 차
@@ -903,10 +904,10 @@ flowchart LR
 - 수행 작업:
   - 360px 이상: 에디터 편집 패널을 프리뷰 아래로, 프리뷰 780px 비율 축소, 퍼블리시 버튼 하단 고정, 헤더 메뉴.
 - 완료 조건:
-  - [ ] 360px·768px·1280px에서 WF-02~08 가로 스크롤 없음
-  - [ ] 360px에서 프리뷰가 화면 폭에 맞게 축소 표시
+  - [x] 360px·768px·1280px에서 WF-02~08 가로 스크롤 없음
+  - [x] 360px에서 프리뷰가 화면 폭에 맞게 축소 표시
   - [ ] 최신 Chrome·Edge·Safari에서 화면 깨짐 없음(NFR-17)
-  - [ ] `tsc --noEmit` 통과
+  - [x] `tsc --noEmit` 통과
 
 ### 6.4 OPS
 
@@ -937,11 +938,11 @@ flowchart LR
   - [ ] PRD-V-1: E2E(가입 → 생성 → 편집 → 퍼블리시 → 복사) 10회 중 9회 이상 성공
   - [ ] PRD-V-2: 실 LLM 생성 10회 p90 ≤ 60초
   - [ ] PRD-V-3: 운영 환경 동시 퍼블리시 2건 → DEDUCT 1건, 잔액 −1
-  - [ ] PRD-V-4: BE-15 테스트 통과 기록
+  - [x] PRD-V-4: BE-15 테스트 통과 기록
   - [ ] PRD-V-5: k6 1,000 VU p95 ≤ 300ms, 오류율 < 1%
   - [ ] PRD-V-6: mock 동시 200건 → 초과분 503 + `Retry-After`, 서버 다운 0회, 종료 후 `active_job_type IS NOT NULL` 행 0건
   - [ ] PRD-V-7: 운영에서 퍼블리시한 최종 HTML을 WING 상세설명에 붙여 스타일·이미지 정상(1회 이상). 인라인 style이나 외부 이미지가 막히면 D-16/D-12 재결정(DEC-06)
-  - [ ] [P2] `frontend/dist`에서 `sk-`·`AIza`·`postgresql://` 0건(NFR-07)
+  - [x] [P2] `frontend/dist`에서 `sk-`·`AIza`·`postgresql://` 0건(NFR-07)
   - [ ] 랜딩 LCP ≤ 2.5초(NFR-06)
 
 ---

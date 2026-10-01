@@ -1,0 +1,17 @@
+.editor { display: grid; gap: var(--space-3); min-width: 0; }
+.list { list-style: none; margin: 0; padding: var(--space-3); display: grid; gap: var(--space-1); background: var(--color-bg-block); border-radius: var(--radius-md); max-height: 240px; overflow: auto; }
+.item {
+  width: 100%; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2);
+  border: 0; border-radius: var(--radius-xs); background: none; color: var(--color-text-secondary);
+  font-size: var(--fs-xs); text-align: left; cursor: pointer;
+}
+.item:hover { background: var(--color-bg-control); }
+.item[aria-pressed="true"] { background: var(--color-badge-bg); color: var(--color-badge-text); }
+.chip {
+  flex: none; width: 26px; height: 20px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-xs); background: var(--color-bg-control); font-size: var(--fs-micro);
+}
+.label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field { display: grid; gap: var(--space-1); }
+.fieldFoot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.fieldFoot :global(.field-hint) { margin: 0; }

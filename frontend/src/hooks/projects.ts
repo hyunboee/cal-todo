@@ -35,7 +35,7 @@ export function useCreateProject() {
 }
 
 // 실행 시점 캐시의 version을 사용한다(409 후 갱신된 값 반영)
-function currentVersion(qc: ReturnType<typeof useQueryClient>, id: string): number {
+export function currentVersion(qc: ReturnType<typeof useQueryClient>, id: string): number {
   return qc.getQueryData<Project>(['project', id])?.version ?? 0
 }
 

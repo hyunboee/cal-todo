@@ -1,5 +1,5 @@
 import { once } from 'node:events'
-import { PORT } from './config.js'
+import { PORT, UNDER_PM2 } from './config.js'
 import { pool } from './db.js'
 import { createApp } from './app.js'
 import { startJobs, stopJobs } from './jobs/index.js'
@@ -21,7 +21,8 @@ export async function start({ port = PORT } = {}) {
   return { server, shutdown }
 }
 
-if (import.meta.main) {
+// PM2는 이 파일을 import로 불러 import.meta.main이 false다
+if (import.meta.main || UNDER_PM2) {
   const { shutdown } = await start()
   // Windows는 SIGTERM을 실제로 받을 수 없어 SIGINT(Ctrl+C)도 연결한다.
   for (const sig of ['SIGTERM', 'SIGINT']) process.once(sig, () => shutdown().then(() => process.exit(0)))

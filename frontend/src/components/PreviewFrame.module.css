@@ -1,4 +1,4 @@
-/* 폭 780(+세로 스크롤바 여유 16), 높이 calc(100vh - 220px) 최소 600, 모바일 zoom .46 [가정] */
+/* 폭 780(+세로 스크롤바 여유 16), 높이 calc(100vh - 220px) 최소 600, zoom 768~1139 .55 / ≤767 .4 [가정] */
 .wrap { position: relative; width: 796px; margin: 0 auto; background: #fff; }
 .frame { display: block; width: 796px; height: max(600px, calc(100vh - 220px)); border: 0; }
 .mark {
@@ -11,4 +11,5 @@
   font-size: 26px; font-weight: 800; transform: rotate(-18deg);
   color: var(--color-watermark-strong);
 }
-@media (max-width: 767px) { .wrap { zoom: .46; } }
+@media (max-width: 1139px) { .wrap { zoom: .55; } }
+@media (max-width: 767px) { .wrap { zoom: .4; } }

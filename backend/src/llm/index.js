@@ -82,7 +82,7 @@ async function mockGenerate(role, modelId, prompt, signal) {
   if (delay) await sleep(Number(delay[1]), undefined, { signal })
   else if (modelId !== 'ok') throw new Error('mock failure')
   if (role === 'LIGHT') return { text: JSON.stringify(MOCK_USPS) }
-  const imgs = [...new Set(prompt.match(/asset:[0-9a-f-]{36}/g) ?? [])].map((a) => `<img src="${a}" alt="">`)
+  const imgs = [...new Set(prompt.match(/asset:(?:[0-9a-f-]{36}|\d+)\b/g) ?? [])].map((a) => `<img src="${a}" alt="">`)
   return { text: MOCK_MAIN_HTML.replace('{IMGS}', imgs.join('')) }
 }
 

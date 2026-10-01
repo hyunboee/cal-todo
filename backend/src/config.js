@@ -21,6 +21,7 @@ export const NODE_ENV = process.env.NODE_ENV ?? 'development'
 const port = process.env.PORT ?? '3000'
 if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) throw new Error('PORT must be 1-65535') // OP-01
 export const PORT = Number(port)
+export const UNDER_PM2 = process.env.pm_id !== undefined // PM2가 프로세스마다 설정(OP-11)
 
 // OP-01: JWT 키는 32바이트 이상, 서로 달라야 한다(PRD 5.8)
 const secret = (key) => {
@@ -71,6 +72,8 @@ export const S3_SECRET_ACCESS_KEY = s3Var('S3_SECRET_ACCESS_KEY')
 export const S3_PRIVATE_BUCKET = s3Var('S3_PRIVATE_BUCKET')
 export const S3_PUBLIC_BUCKET = s3Var('S3_PUBLIC_BUCKET')
 export const STORAGE_LOCAL_DIR = resolve(process.env.STORAGE_LOCAL_DIR || '.storage')
+// OP-11: 정적 랜딩 + SPA 빌드 결과(없으면 서빙하지 않음). 기본은 backend 기준 ../frontend/dist
+export const FRONTEND_DIST = resolve(process.env.FRONTEND_DIST || '../frontend/dist')
 export const PUBLIC_IMAGE_BASE_URL = devDefault('PUBLIC_IMAGE_BASE_URL', 'http://localhost:3000/public-images').replace(/\/+$/, '')
 
 // PP-09 상수
