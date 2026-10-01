@@ -1,0 +1,5 @@
+.banner { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-12); border-left: 3px solid; color: var(--color-text); font-size: var(--fs-sm); }
+.info { background: var(--color-info-bg); border-color: var(--color-info); }
+.warn { background: var(--color-warn-bg); border-color: var(--color-warn); }
+.error { background: var(--color-error-bg); border-color: var(--color-error); }
+@media (max-width: 767px) { .banner { padding: var(--space-3) var(--space-4); } }

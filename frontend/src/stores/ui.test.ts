@@ -27,8 +27,8 @@ describe('useUiStore', () => {
   })
 
   it('setToast → 메시지 표시·제거', () => {
-    useUiStore.getState().setToast('저장됨')
-    assert.equal(useUiStore.getState().toast, '저장됨')
+    useUiStore.getState().setToast({ text: '저장됨', tone: 'success' })
+    assert.deepEqual(useUiStore.getState().toast, { text: '저장됨', tone: 'success' })
     useUiStore.getState().setToast(null)
     assert.equal(useUiStore.getState().toast, null)
   })

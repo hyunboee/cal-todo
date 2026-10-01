@@ -2,8 +2,11 @@ import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { MutationObserver } from '@tanstack/react-query'
 import { MAX_503_RETRIES, onApiError, queryClient, retry, retryDelay } from './queryClient.ts'
+import { useUiStore } from './stores/ui.ts'
+import { messageOf } from './messages.ts'
 
 const invalidated = (key: unknown[]) => queryClient.getQueryState(key)?.isInvalidated
+const toast = () => useUiStore.getState().toast
 
 function seed() {
   queryClient.setQueryData(['project', 'p1'], 1)
@@ -40,7 +43,10 @@ describe('retryDelay', () => {
 })
 
 describe('onApiError', () => {
-  beforeEach(() => queryClient.clear())
+  beforeEach(() => {
+    queryClient.clear()
+    useUiStore.getState().setToast(null)
+  })
 
   it('409 + projectId → 해당 project만 무효화', async () => {
     seed()
@@ -58,14 +64,42 @@ describe('onApiError', () => {
     assert.equal(invalidated(['me']), false)
   })
 
-  it('500/null → 무시', async () => {
+  it('500/null → 무시(토스트 없음)', async () => {
     seed()
     await onApiError({ status: 500 })
     await onApiError(null)
     assert.equal(invalidated(['project', 'p1']), false)
     assert.equal(invalidated(['project', 'p2']), false)
     assert.equal(invalidated(['me']), false)
+    assert.equal(toast(), null)
   })
+
+  it('409 → info 토스트(messageOf 문구) + 무효화', async () => {
+    seed()
+    const e = { status: 409, code: 'VERSION_CONFLICT', projectId: 'p1' }
+    await onApiError(e)
+    assert.deepEqual(toast(), { tone: 'info', text: messageOf(e) })
+    assert.equal(invalidated(['project', 'p1']), true)
+  })
+
+  it('429 → warn 토스트(messageOf 문구), 무효화 없음', async () => {
+    seed()
+    const e = { status: 429, code: 'DAILY_LLM_LIMIT' }
+    await onApiError(e)
+    assert.deepEqual(toast(), { tone: 'warn', text: messageOf(e) })
+    assert.equal(invalidated(['project', 'p1']), false)
+    assert.equal(invalidated(['me']), false)
+  })
+
+  for (const [status, code] of [[402, 'INSUFFICIENT_CREDIT'], [403, 'EMAIL_NOT_VERIFIED']] as const) {
+    it(`${status} → ['me'] 무효화, project 유지, 토스트 없음`, async () => {
+      seed()
+      await onApiError({ status, code })
+      assert.equal(invalidated(['me']), true)
+      assert.equal(invalidated(['project', 'p1']), false)
+      assert.equal(toast(), null)
+    })
+  }
 })
 
 describe('queryClient 연결', () => {

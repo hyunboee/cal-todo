@@ -1,0 +1,6 @@
+.toast { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 100; max-width: 360px; padding: var(--space-3) var(--space-4); background: var(--color-bg-panel); border: 1px solid; border-radius: var(--radius-lg); color: var(--color-text); font-size: var(--fs-sm); }
+.info { border-color: var(--color-info); }
+.warn { border-color: var(--color-warn); }
+.success { border-color: var(--color-success); }
+.error { border-color: var(--color-error); }
+@media (max-width: 767px) { .toast { left: 0; right: 0; bottom: 0; max-width: none; border-radius: 0; } }

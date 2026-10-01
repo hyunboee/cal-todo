@@ -1,6 +1,8 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
+import { messageOf } from './messages.ts'
+import { useUiStore } from './stores/ui.ts'
 
-export type ErrorLike = { status?: number; retryAfter?: number; projectId?: string }
+export type ErrorLike = { status?: number; code?: string; retryAfter?: number; projectId?: string }
 
 export const MAX_503_RETRIES = 3 // [가정]
 
@@ -16,11 +18,17 @@ export const retryDelay = (count: number, e: unknown) => {
   return retryAfter !== undefined ? retryAfter * 1000 : Math.min(1000 * 2 ** count, 30_000)
 }
 
-// 409면 해당 프로젝트 쿼리 무효화(LY-10)
+// 409: 프로젝트 쿼리 무효화(LY-10) + 안내 토스트, 429: 경고 토스트, 402·403: 자격(me) 갱신
 export function onApiError(e: unknown) {
   const { status, projectId } = asErr(e)
-  if (status !== 409) return
-  void queryClient.invalidateQueries({ queryKey: projectId ? ['project', projectId] : ['project'] })
+  if (status === 409) {
+    void queryClient.invalidateQueries({ queryKey: projectId ? ['project', projectId] : ['project'] })
+    useUiStore.getState().setToast({ tone: 'info', text: messageOf(e) })
+  } else if (status === 429) {
+    useUiStore.getState().setToast({ tone: 'warn', text: messageOf(e) })
+  } else if (status === 402 || status === 403) {
+    void queryClient.invalidateQueries({ queryKey: ['me'] })
+  }
 }
 
 export const queryClient = new QueryClient({

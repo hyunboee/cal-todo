@@ -1143,6 +1143,11 @@ components:
           nullable: true
           enum: [ANALYZE, GENERATE, REGEN, AI_EDIT, null]
           description: 진행 중 LLM 작업. null이면 없음
+        activeJobStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 진행 중 작업 시작 시각(경과 시간 표시용). activeJobType이 null이면 null
         publishedAt:
           type: string
           format: date-time
@@ -1164,6 +1169,7 @@ components:
         aiEditCount: 0
         aiEditFailCount: 0
         activeJobType: null
+        activeJobStartedAt: null
         publishedAt: null
         createdAt: '2026-09-30T09:00:00Z'
 

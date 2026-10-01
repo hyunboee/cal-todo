@@ -1,0 +1,14 @@
+/* 폭 780(+세로 스크롤바 여유 16), 높이 calc(100vh - 220px) 최소 600, 모바일 zoom .46 [가정] */
+.wrap { position: relative; width: 796px; margin: 0 auto; background: #fff; }
+.frame { display: block; width: 796px; height: max(600px, calc(100vh - 220px)); border: 0; }
+.mark {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='90'><text x='85' y='45' transform='rotate(-25 85 45)' text-anchor='middle' font-family='sans-serif' font-size='12' font-weight='700' fill='rgb(255,255,255)' fill-opacity='.08'>PREVIEW ONLY</text></svg>");
+}
+.mark::after {
+  content: 'PREVIEW ONLY / 무단 복제 금지';
+  position: absolute; left: 0; right: 0; bottom: 18%; text-align: center;
+  font-size: 26px; font-weight: 800; transform: rotate(-18deg);
+  color: var(--color-watermark-strong);
+}
+@media (max-width: 767px) { .wrap { zoom: .46; } }

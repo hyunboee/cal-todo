@@ -1,11 +1,11 @@
-# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.21 초안)
+# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.22 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 작업 실행 계획(WBS) |
-| 버전 | v0.1.21 (초안) |
+| 버전 | v0.1.22 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
 | 기준 문서 버전 | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
@@ -18,6 +18,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.22 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-02a~FE-05b 완료 조건 체크(29개, `[x]` 172개). `tsc --noEmit`·`npm run build` 통과, `node --test` 100/100(라인 커버리지 100%), 수동 조건은 브라우저 E2E로 확인(JWT_ACCESS_TTL_SEC=30 동시 5건 refresh 1회, `rt` 삭제, 업로드 3장·11장, 연속 저장, 상태별 이동, mock delay·fail, 503 자동 재시도) |
 | v0.1.21 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-01a·FE-01b 완료 조건 체크(7개, `[x]` 143개). `tsc --noEmit` 통과, `npm run build` → `dist/index.html`·`dist/app/index.html`(noindex), 개발 서버 `/api` 프록시 401 전달 확인. 순수 TS 모듈(stores, queryClient)은 `node --test` 18/18, 라인 커버리지 100%(새 의존성 없음, QA-05 외 추가) |
 | v0.1.20 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리(체크박스 변경 없음, `[x]` 136개 유지): 3장 DEC-10, BE-08b(429 초기화 시각 문구) |
 | v0.1.19 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.12, PRD v0.3.11, 시나리오 v0.1.10, 와이어프레임 v0.1.10, 구조 원칙 v0.1.12, 아키텍처 v0.1.12, ERD v0.1.12 | 백엔드 구현 기준 최신화(체크박스 변경 없음, `[x]` 136개 유지): DB-03(주기 작업 시작 시 즉시 1회 실행·간격 기준) |
@@ -138,14 +139,14 @@ P1 Task는 P1 Task만 선행으로 둔다(P2 역의존 없음). P2 Task의 선�
 | BE-15 | 콘텐츠 유출·자격 통합 테스트 | BE | M | P2 | BE-11, BE-12, BE-13, BE-14b | P2 4일 차 | 1h | [x] |
 | FE-01a | 프론트 골격(SPA, 라우터, Query, 인증 스토어) | FE | M | P1 | DEC-03(결정됨) | 2일 차 오전 | 0.5h | [x] |
 | FE-01b | 멀티 페이지·noindex·Query 공통 처리 | FE | M | P2 | FE-01a | P2 2일 차 | 0.5h | [x] |
-| FE-02a | API client | FE | M | P1 | FE-01a | 2일 차 오전 | 0.5h | [ ] |
-| FE-02b | 인증 갱신 흐름 | FE | M | P2 | FE-02a, BE-04(통합 확인) | P2 2일 차 | 1h | [ ] |
-| FE-03a | WF-02 로그인·가입 | FE | M | P1 | FE-02a, BE-03a | 2일 차 오전 | 0.5h | [ ] |
-| FE-03b | 공통 헤더·배너·토스트·로그아웃 | FE | M | P2 | FE-03a, FE-02b, BE-04 | P2 2일 차 | 1h | [ ] |
-| FE-04a | WF-04 폼(텍스트 입력) | FE | M | P1 | FE-03a, BE-05a, DEC-05(결정됨) | 2일 차 오후 | 0.5h | [ ] |
-| FE-04b | WF-03 목록, WF-04 업로드·폼 재저장 | FE | M | P2 | FE-04a, FE-03b, BE-05b, BE-06 | P2 2일 차 | 1.5h | [ ] |
-| FE-05a | WF-06 에디터: 프리뷰·생성(기본) | FE | M | P1 | FE-04a, BE-10a | 2일 차 오후 | 1h | [ ] |
-| FE-05b | WF-06 에디터: 진행·실패·재시도 상태 | FE | M | P2 | FE-05a, FE-04b, BE-10b | P2 3일 차 | 1.5h | [ ] |
+| FE-02a | API client | FE | M | P1 | FE-01a | 2일 차 오전 | 0.5h | [x] |
+| FE-02b | 인증 갱신 흐름 | FE | M | P2 | FE-02a, BE-04(통합 확인) | P2 2일 차 | 1h | [x] |
+| FE-03a | WF-02 로그인·가입 | FE | M | P1 | FE-02a, BE-03a | 2일 차 오전 | 0.5h | [x] |
+| FE-03b | 공통 헤더·배너·토스트·로그아웃 | FE | M | P2 | FE-03a, FE-02b, BE-04 | P2 2일 차 | 1h | [x] |
+| FE-04a | WF-04 폼(텍스트 입력) | FE | M | P1 | FE-03a, BE-05a, DEC-05(결정됨) | 2일 차 오후 | 0.5h | [x] |
+| FE-04b | WF-03 목록, WF-04 업로드·폼 재저장 | FE | M | P2 | FE-04a, FE-03b, BE-05b, BE-06 | P2 2일 차 | 1.5h | [x] |
+| FE-05a | WF-06 에디터: 프리뷰·생성(기본) | FE | M | P1 | FE-04a, BE-10a | 2일 차 오후 | 1h | [x] |
+| FE-05b | WF-06 에디터: 진행·실패·재시도 상태 | FE | M | P2 | FE-05a, FE-04b, BE-10b | P2 3일 차 | 1.5h | [x] |
 | FE-06 | WF-06 에디터: 블록 편집·재생성 | FE | M | P2 | FE-05b, BE-11, BE-12, DEC-08(결정됨) | P2 4일 차 | 2h | [ ] |
 | FE-07 | WF-05 경쟁사 분석·USP 선택 | FE | M | P2 | FE-04b, BE-13 | P2 4일 차 | 1.5h | [ ] |
 | FE-08a | WF-07 퍼블리시 확인, WF-08 최종 HTML·복사(기본) | FE | M | P1 | FE-05a, BE-14a | 2일 차 오후 | 0.5h | [ ] |
@@ -741,9 +742,9 @@ flowchart LR
   - `api/client.ts`: Bearer 주입, `ApiError(code)`. P1은 401이면 갱신 시도 없이 스토어·Query 캐시 초기화 후 `/app/login`(Access Token 만료 시 재로그인. 갱신은 FE-02b).
   - `api/types.ts`(toMe, toProject 필드), 리소스별 호출 함수.
 - 완료 조건:
-  - [ ] 변조한 Access Token → 로그인 화면, 캐시 비워짐
-  - [ ] 컴포넌트의 직접 `fetch` 0건(grep, LY-09)
-  - [ ] `tsc --noEmit` 통과
+  - [x] 변조한 Access Token → 로그인 화면, 캐시 비워짐
+  - [x] 컴포넌트의 직접 `fetch` 0건(grep, LY-09)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-02b 인증 갱신 흐름
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 2일 차 (FE-02 1.5h 중 1h)
@@ -753,11 +754,11 @@ flowchart LR
   - `api/client.ts`: 401 `TOKEN_EXPIRED` → 공유 refresh Promise 1개 → 원 요청 1회 재시도, 갱신 실패 → 스토어·Query 캐시 초기화 → `/app/login`. 401 `TOKEN_INVALID` → 갱신 시도 없이 같은 초기화 후 `/app/login`(DEC-09).
   - 앱 시작 시 refresh 1회(`main.tsx`).
 - 완료 조건:
-  - [ ] FR-40: `JWT_ACCESS_TTL_SEC=30`에서 만료 후 동시 요청 5건 → refresh 호출 1회, 5건 모두 재시도 성공(수동, QA-05)
-  - [ ] 새로고침 후 재로그인 없이 인증 복원
-  - [ ] `rt` 쿠키 삭제 후 요청 → 로그인 화면, 캐시 비워짐(US-04)
-  - [ ] 변조한 Access Token(`TOKEN_INVALID`) → refresh 호출 0회, 로그인 화면, 캐시 비워짐
-  - [ ] `tsc --noEmit` 통과
+  - [x] FR-40: `JWT_ACCESS_TTL_SEC=30`에서 만료 후 동시 요청 5건 → refresh 호출 1회, 5건 모두 재시도 성공(수동, QA-05)
+  - [x] 새로고침 후 재로그인 없이 인증 복원
+  - [x] `rt` 쿠키 삭제 후 요청 → 로그인 화면, 캐시 비워짐(US-04)
+  - [x] 변조한 Access Token(`TOKEN_INVALID`) → refresh 호출 0회, 로그인 화면, 캐시 비워짐
+  - [x] `tsc --noEmit` 통과
 
 #### FE-03a WF-02 로그인·가입
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 2일 차 오전 (FE-03 1.5h 중 0.5h)
@@ -766,9 +767,9 @@ flowchart LR
 - 수행 작업:
   - `LoginPage`(로그인·가입), 오류 표시.
 - 완료 조건:
-  - [ ] 가입 → `/app` 진입(US-01)
-  - [ ] 틀린 비밀번호 → 오류 표시, 화면 유지
-  - [ ] `tsc --noEmit` 통과
+  - [x] 가입 → `/app` 진입(US-01)
+  - [x] 틀린 비밀번호 → 오류 표시, 화면 유지
+  - [x] `tsc --noEmit` 통과
 
 #### FE-03b 공통 헤더·배너·토스트·로그아웃
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 2일 차 (FE-03 1.5h 중 1h)
@@ -777,9 +778,9 @@ flowchart LR
 - 수행 작업:
   - `Header`(잔액, 인증 여부, 로그아웃 → 스토어·캐시 초기화 → 로그인 화면), `Banner`(`me` 기반 402·403), `Toast`.
 - 완료 조건:
-  - [ ] 로그아웃 → 로그인 화면, 뒤로가기로 이전 데이터 안 보임(US-05)
-  - [ ] 미인증·잔액 0 사용자에게 배너 표시(US-07)
-  - [ ] `tsc --noEmit` 통과
+  - [x] 로그아웃 → 로그인 화면, 뒤로가기로 이전 데이터 안 보임(US-05)
+  - [x] 미인증·잔액 0 사용자에게 배너 표시(US-07)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-04a WF-04 폼(텍스트 입력)
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 2일 차 오후 (FE-04 2h 중 0.5h)
@@ -788,8 +789,8 @@ flowchart LR
 - 수행 작업:
   - `ProjectFormPage`: 제품명·카테고리·소개글·톤앤매너(D-18 힌트 검증). 제출 시 `POST /api/projects`(form 포함, DEC-05) 후 분석 생략 생성(에디터)으로 이동. 이미지 업로드·재저장은 FE-04b.
 - 완료 조건:
-  - [ ] 폼 제출 → form이 저장된 DRAFT 프로젝트 생성, 에디터로 이동
-  - [ ] `tsc --noEmit` 통과
+  - [x] 폼 제출 → form이 저장된 DRAFT 프로젝트 생성, 에디터로 이동
+  - [x] `tsc --noEmit` 통과
 
 #### FE-04b WF-03 목록, WF-04 업로드·폼 재저장
 - 우선순위: M · 단계: P2 · 추정: 1.5h · 구간: P2 2일 차 (FE-04 2h 중 1.5h)
@@ -799,12 +800,12 @@ flowchart LR
   - `ProjectsPage`: 목록, 상태별 이동(DRAFT·ANALYZED → 폼/분석, GENERATED·EDITING → 에디터, PUBLISHED → WF-08), 새 프로젝트 버튼. `/app`을 목록으로 바꾼다.
   - `ProjectFormPage`: 이미지 1장씩 업로드와 진행·오류 표시, 분석 또는 분석 생략 생성으로 이동. 프로젝트가 있으면 `PUT /api/projects/:id/form`(version)으로 저장한다(DEC-05). 저장 성공 시 응답의 새 version을 프로젝트 쿼리에 반영한다.
 - 완료 조건:
-  - [ ] 폼 제출 → DRAFT 프로젝트 생성, 이미지 3장 업로드 → 업로드 수 3 표시
-  - [ ] DRAFT 프로젝트를 다시 열어 값을 고치고 저장 → `PUT /form` 성공, 다시 열면 수정값 표시
-  - [ ] 폼 저장 직후 연속으로 다시 저장해도 409 없음(새 version이 쿼리에 반영됨)
-  - [ ] 11번째 이미지 → 오류 표시(AC-BR36)
-  - [ ] 목록에서 상태별로 올바른 화면 이동(PUBLISHED → WF-08)
-  - [ ] `tsc --noEmit` 통과
+  - [x] 폼 제출 → DRAFT 프로젝트 생성, 이미지 3장 업로드 → 업로드 수 3 표시
+  - [x] DRAFT 프로젝트를 다시 열어 값을 고치고 저장 → `PUT /form` 성공, 다시 열면 수정값 표시
+  - [x] 폼 저장 직후 연속으로 다시 저장해도 409 없음(새 version이 쿼리에 반영됨)
+  - [x] 11번째 이미지 → 오류 표시(AC-BR36)
+  - [x] 목록에서 상태별로 올바른 화면 이동(PUBLISHED → WF-08)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-05a WF-06 에디터: 프리뷰·생성(기본)
 - 우선순위: M · 단계: P1 · 추정: 1h · 구간: 2일 차 오후 (FE-05 2.5h 중 1h)
@@ -814,9 +815,9 @@ flowchart LR
   - `EditorPage` + `PreviewFrame`(`sandbox` iframe `srcdoc`, 780px 비율 축소).
   - 생성 요청(version 포함), 응답 대기 중 버튼 비활성, 완료 후 프리뷰 표시, 오류 코드 표시.
 - 완료 조건:
-  - [ ] 폼 입력 → 생성 → 워터마크 프리뷰가 sandbox iframe에 표시(로컬, M2)
-  - [ ] iframe `sandbox`에 `allow-scripts` 없음, `dangerouslySetInnerHTML` 0건(LY-12)
-  - [ ] `tsc --noEmit` 통과
+  - [x] 폼 입력 → 생성 → 워터마크 프리뷰가 sandbox iframe에 표시(로컬, M2)
+  - [x] iframe `sandbox`에 `allow-scripts` 없음, `dangerouslySetInnerHTML` 0건(LY-12)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-05b WF-06 에디터: 진행·실패·재시도 상태
 - 우선순위: M · 단계: P2 · 추정: 1.5h · 구간: P2 3일 차 (FE-05 2.5h 중 1.5h)
@@ -825,10 +826,10 @@ flowchart LR
 - 수행 작업:
   - 생성 중 배너(경과 시간), WF-06 버튼 활성 표, `activeJobType`으로 새로고침 복원, 503 대기 배너·자동 재시도, 실패 시 이전 상태. DRAFT·ANALYZED는 WF-05로.
 - 완료 조건:
-  - [ ] 프리뷰 이미지가 data URI로 표시되고 이미지 관련 추가 네트워크 요청 0건(DEC-01)
-  - [ ] 생성 중 새로고침 → 진행 배너 복원
-  - [ ] `mock` 실패 → 이전 상태, 버튼 재활성
-  - [ ] `tsc --noEmit` 통과
+  - [x] 프리뷰 이미지가 data URI로 표시되고 이미지 관련 추가 네트워크 요청 0건(DEC-01)
+  - [x] 생성 중 새로고침 → 진행 배너 복원
+  - [x] `mock` 실패 → 이전 상태, 버튼 재활성
+  - [x] `tsc --noEmit` 통과
 
 #### FE-06 WF-06 에디터: 블록 편집·재생성
 - 우선순위: M · 단계: P2 · 추정: 2h · 구간: P2 4일 차

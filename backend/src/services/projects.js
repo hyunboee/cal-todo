@@ -18,6 +18,7 @@ export const toProject = (row) => ({
   aiEditCount: row.ai_edit_count,
   aiEditFailCount: row.ai_edit_fail_count,
   activeJobType: row.active_job_type,
+  activeJobStartedAt: row.active_job_started_at,
   publishedAt: row.published_at,
   createdAt: row.created_at,
 })
