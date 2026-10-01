@@ -1,14 +1,14 @@
-# Coupang AI Detail Maker - ERD (v0.1.9 초안)
+# Coupang AI Detail Maker - ERD (v0.1.10 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 데이터 모델(ERD) |
-| 버전 | v0.1.9 (초안) |
+| 버전 | v0.1.10 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 문서 버전 | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9 |
+| 기준 문서 버전 | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10 |
 | 범위 | PostgreSQL 17 논리·물리 모델. 물리 설계는 PRD 7.4를 기준으로 하고 도메인 엔티티·BR로 제약을 보강했다. SQL 파일은 만들지 않는다(마이그레이션은 OP-10) |
 
 **표기 규약**
@@ -23,6 +23,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.10 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10 | 백엔드 구현 [가정] 반영: 4.3 refresh_tokens.created_at(30일 판정 한계), 4.7 assets.public_key(공개 키 형식), 7장 공개 사본 재시도 행, 8장 E-13(해소). 스키마 변경 없음(`docs/schema.sql` 미수정) |
 | v0.1.9 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9 | DB-01~03 구현 후속 정합화: 기준 문서 버전 갱신만(본문 변경 없음). 스키마 변경 없음(`docs/schema.sql` 머리말의 근거 ERD 버전만 갱신) |
 | v0.1.8 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.8, 아키텍처 v0.1.8 | 기준 문서 버전 갱신만 반영 |
 | v0.1.7 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.7, 아키텍처 v0.1.7 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. 기준 문서 버전 갱신만(본문 변경 없음). 스키마 변경 없음(`docs/schema.sql` 머리말의 근거 ERD 버전만 갱신) |
@@ -251,7 +252,7 @@ erDiagram
 | expires_at | timestamptz | N | - | 14일, 회전 시 새로 계산 | PRD 5.8 |
 | revoked_at | timestamptz | Y | - | 회전·로그아웃·재사용 탐지 시 기록 | FR-37~39 |
 | replaced_by | uuid | Y | - | 회전으로 만든 새 행의 jti | FR-37 |
-| created_at | timestamptz | N | now() | 발급 시각. 패밀리 최대 30일은 같은 family의 최소 created_at으로 판정 `[가정]` | PRD 5.8 |
+| created_at | timestamptz | N | now() | 발급 시각. 패밀리 최대 30일은 같은 family의 최소 created_at으로 판정 `[가정]`(한계: 일 1회 job이 가장 오래된 행을 지우면 상한이 늘어남, PRD-R-12) | PRD 5.8 |
 
 ### 4.4 credit_wallets (M)
 
@@ -303,7 +304,7 @@ erDiagram
 | project_id | uuid | N | - | FK projects.id. 프로젝트당 10개는 앱 검증 | PRD 7.4, D-19 |
 | original_key | text | N | - | 비공개 버킷 원본 키. 응답 금지 | BR-32, PP-05 |
 | preview_key | text | N | - | 비공개 버킷 프리뷰 사본 키(390px 이하, 워터마크). 서버가 읽어 data URI로 프리뷰 HTML에 인라인(E-8) | BR-50, FR-11 |
-| public_key | text | Y | - | 공개 사본 키. 커밋 뒤 복사, NULL이면 복사 미완료 | BR-66, FR-22 |
+| public_key | text | Y | - | 공개 사본 키 `{assetId}.{ext}`(asset id에서 결정적으로 만들어 복사 성공 뒤에만 저장). 커밋 뒤 복사, NULL이면 복사 미완료 | BR-66, FR-22 |
 | mime | text | N | - | image/jpeg·png·webp(앱 검증) | D-19 |
 | size | integer | N | - | 바이트, 10MB 이하(앱 검증) | D-19 |
 
@@ -453,7 +454,7 @@ erDiagram
 | 폼 값(제품명 등) 저장 위치 | 시나리오 I-8, 구조 원칙 C-9, WF-04 "DRAFT 이어서 작성" | PRD의 `projects.form` jsonb로 수용. 저장은 `PUT /api/projects/:id/form`(E-5 해소) |
 | 화면용 카운트·version·active_job | WF-05·06·09(N-5), 구조 원칙 C-8 | 컬럼은 모두 있음. API 응답 필드(`toProject`)는 PRD v0.3.2 8장에 반영, 스키마 변경 없음 |
 | 프리뷰 이미지 전달 | 구조 원칙 C-1, 아키텍처 7장 | `assets.preview_key`로 충분. data URI 인라인으로 확정, 새 컬럼 불필요(E-8) |
-| 공개 사본 복사 재시도 상태 | FR-22, 시나리오 I-16 | `assets.public_key IS NULL`로 미완료 판정. 별도 상태 컬럼 없음 `[가정]` |
+| 공개 사본 복사 재시도 상태 | FR-22, 시나리오 I-16 | `assets.public_key IS NULL`로 미완료 판정. 별도 상태 컬럼 없음 `[가정]`. 재시도는 퍼블리시 재요청과 `GET /final`(I-16 해소) |
 | 409·429 오류 원인 구분 | 시나리오 I-7, 구조 원칙 C-2 | 응답 코드(4.2절) 영역이라 DB 컬럼 불필요. 판정 재료(status, version, active_job_type, 각 카운트)는 이미 있음 |
 | WING 주입 성공률(시도 단위) | 도메인 KPI-5 | `publish_records`는 마지막 상태만 보관해 시도 단위 집계 불가(E-10) |
 | 확장 결과 화면 표시 | WF-10(N-13) | `publish_records.inject_status`로 조회 가능. API만 미정 |
@@ -512,5 +513,5 @@ erDiagram
 | E-10 | 주입 시도 기록 | KPI-5는 시도 단위 성공률인데 `publish_records`는 프로젝트당 마지막 상태 1행이다. 제안: 로그(NFR-18)로 집계하고 테이블은 추가하지 않음 | KPI-5, BR-64 |
 | E-11 | AI 수정 대화 보관 | 서버 보관이면 `edit_operations.payload`(type=AI)에 지시문을 담을지 결정 필요(S) | N-12, FR-19 |
 | E-12 | payments.status·구독 원장 | payments.status 값 정의가 없다. 또 BR-17은 갱신 시 EXPIRE와 GRANT를 같은 TX로 기록하는데 둘 다 pg_tx_id를 가지면 `UNIQUE(pg_tx_id)`에 걸린다. EXPIRE는 pg_tx_id NULL로 둘지 결정 필요(W) | BR-17, FR-08 |
-| E-13 | 재생성과 edit_operations | BR-34는 재생성 시 수동 편집을 초기화한다. draft_html 교체만 할지 edit_operations 행도 지울지 정해져 있지 않다. 제안: 행은 기록으로 남김 | BR-34, I-14 |
+| E-13 | 재생성과 edit_operations | 해소(구현): 재생성은 draft_html만 교체하고 edit_operations 행은 기록으로 남긴다. BR-34는 재생성 시 수동 편집을 초기화한다 | BR-34, I-14 |
 | E-14 | 계정 일일 상한 기준 시각 | 해소(DEC-10, Asia/Seoul 자정 기준). 집계는 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`. 인덱스 변경 없음 | I-20, FR-29 |

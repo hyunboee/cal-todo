@@ -1,15 +1,15 @@
-# Coupang AI Detail Maker - 사용자 시나리오 (v0.1.7 초안)
+# Coupang AI Detail Maker - 사용자 시나리오 (v0.1.8 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 사용자 시나리오 |
-| 버전 | v0.1.7 (초안) |
+| 버전 | v0.1.8 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.9 (`docs/1-domain-definition.md`) |
-| 기준 PRD 버전 | v0.3.8 (`docs/2-PRD.md`) |
+| 기준 도메인 정의서 버전 | v0.3.10 (`docs/1-domain-definition.md`) |
+| 기준 PRD 버전 | v0.3.9 (`docs/2-PRD.md`) |
 | 범위 | 주 사용자 한 유형 기준의 기능 흐름별 시나리오. 페르소나별 상세 시나리오와 접근성은 범위 외(PRD 3장, 4.3절) |
 
 **표기 규약**
@@ -25,6 +25,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 버전 | 기준 PRD 버전 | 변경내용 |
 |---|---|---|---|---|---|
+| v0.1.8 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.10 | v0.3.9 | 백엔드 구현 [가정] 반영: US-01 E1, US-09 A3, US-14 E6, 9장 I-10, I-12, I-16(해소 표시) |
 | v0.1.7 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | v0.3.8 | DB-01~03 구현 후속 정합화: 기준 문서 버전 갱신만(시나리오 본문 변경 없음) |
 | v0.1.6 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | v0.3.7 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. US-07, US-09 |
 | v0.1.5 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.7 | v0.3.6 | 문서 간 정합성 재점검 반영: 1장 표기 규약(M 정의), 6장 제목(2일 MVP → MVP), US-07(자격 검사 대상에 폼 저장) |
@@ -131,7 +132,7 @@ flowchart TD
   4. → 새 패밀리로 Refresh Token 발급·DB 저장, `rt` 쿠키(HttpOnly·Secure·SameSite=Strict, Path=/api/auth), Access Token은 응답 body(FR-36)
   5. → SPA가 Access Token을 메모리(Zustand)에만 보관, `GET /api/me`로 잔액 0·미인증 상태 표시
 - **대안·예외**
-  - E1 이미 가입된 이메일: 응답 미정의, 확인 필요(I-12)
+  - E1 이미 가입된 이메일: 400 `VALIDATION_FAILED`, 사용자·지갑 생성 0건(I-12 해소, 구현)
 - **사후 조건**: 로그인 상태, 잔액 0, 미인증. 자격 검사 대상 API 불가(US-07).
 - **관련**: FR-31, FR-32, FR-01, FR-36 / BR-01, 05, 06, 80, 81, 82 / AC-BR05, AC-BR80, AC-BR81, AC-BR82 / UserSignedUp
 
@@ -232,7 +233,7 @@ flowchart TD
 - **대안·예외**
   - A1 ANALYZED에서 선택 변경: ANALYZED 유지
   - A2 ANALYZED에서 재분석 성공: 후보 교체, `selectedUsps=[]`, DRAFT(BR-27)
-  - A3 선택 0개로 저장: 동작 미정의, 확인 필요(I-10)
+  - A3 선택 0개로 저장: 400 `VALIDATION_FAILED`, 상태 불변(I-10 해소, 구현)
   - E1 쿠팡 상품 URL 패턴 외, 단축 URL: 400, 크롤링 미실행(AC-BR20). 시도로 세지 않음(BR-26)
   - E2 크롤링 실패(차단·타임아웃): 상태 유지, 시도 소모, 분석 생략 경로 안내(도메인 5장, R-4, PRD-R-5) → US-10 A1. 502 `UPSTREAM_FAILED`(I-4 해소)
   - E3 4번째 시도(실패 포함): 429, 크롤링·LLM 0회(AC-BR26)
@@ -315,7 +316,7 @@ flowchart TD
   - E3 재생성 등 진행 중: 409, 차감 0건(AC-BR39)
   - E4 version 불일치(미퍼블리시): 409
   - E5 TX 중 실패: 전체 ROLLBACK, 잔액·상태 불변(AC-BR12). 화면 반응 확인 필요
-  - E6 공개 사본 생성 실패: 재시도, 차감 유지(FR-22). 사본 준비 전 응답의 이미지 상태·화면 확인 필요(I-16)
+  - E6 공개 사본 생성 실패: 3회 시도 후 로그만 남기고 차감 유지, 응답은 사본 준비와 무관하게 최종 HTML(FR-22). 퍼블리시 재요청과 `GET /final`이 실패한 사본을 재시도한다(I-16 해소, 구현). 사본 준비 전 화면은 프론트 결정
   - E7 이미 PUBLISHED인 프로젝트 재요청: version 검사 없이 기존 결과 반환, 추가 차감 없음(FR-34). 잔액 0이어도 자격 검사 전에 처리(BR-10, FR-06)
 - **사후 조건**: PUBLISHED, DEDUCT 1건, 잔액 = 원장 합계, 읽기 전용.
 - **관련**: FR-21, FR-22, FR-34, FR-35 / BR-11~15, 39, 48, 52, 66 / AC-BR11~14, 52, 66 / PublishConfirmed, CreditDeducted, PublishFailed, PublicImagesCopied
@@ -473,13 +474,13 @@ flowchart TD
 | I-7 | 오류 코드 구분 | 해소(DEC-09). 구조 원칙 4.2절 코드를 전부 채택했다(C-2). 409(`VERSION_CONFLICT`, `JOB_IN_PROGRESS`, `INVALID_STATE`)와 429(`ANALYZE_LIMIT`, `REGEN_LIMIT`, `AI_EDIT_LIMIT`, `DAILY_LLM_LIMIT`, `RATE_LIMITED`)는 코드로 원인을 구분한다. `TOKEN_INVALID`는 갱신 시도 없이 인증 상태를 비우고 로그인 화면으로 간다 | FR-05, FR-40, PRD 8장, C-2 |
 | I-8 | 입력 폼 저장 | 해소(DEC-05). `PUT /api/projects/:id/form`(body `{form, version}`, DRAFT·ANALYZED만)으로 저장한다. `POST /api/projects`는 form을 선택적으로 받는다. 필수값 검증(BR-35)은 생성 요청 시점 | FR-10, FR-14, BR-35, C-9, E-5 |
 | I-9 | 이미지 삭제·교체 | 업로드 제한(10장)에 걸렸을 때 기존 이미지를 삭제·교체하는 API가 없다 | FR-11, BR-36, E-6 |
-| I-10 | USP 0개 저장 | ANALYZED에서 선택을 모두 해제하고 저장하면 어떻게 되는지 정의되어 있지 않다. BR-24는 1개 이상일 때 ANALYZED로 간다고만 한다 | BR-24, FR-12 |
+| I-10 | USP 0개 저장 | 해소(구현). 0개 저장은 400 `VALIDATION_FAILED`, 상태·version 불변. 문자열 배열·중복 없음·후보 안 값만 허용 | BR-24, FR-12 |
 | I-11 | MVP 크레딧 요청 경로 | 사용자가 운영자에게 지급을 요청하는 경로(화면, 연락 수단)가 정의되어 있지 않다 | FR-07, PRD-D-6 |
-| I-12 | 중복 이메일 가입 | Credentials 가입 시 이미 있는 이메일에 대한 응답이 정의되어 있지 않다 | FR-01, BR-02 |
+| I-12 | 중복 이메일 가입 | 해소(구현). 400 `VALIDATION_FAILED`(새 오류 코드 없음). 이메일은 소문자로 정규화해 비교한다 | FR-01, BR-02 |
 | I-13 | 로그아웃 뒤 화면·비밀번호 변경 | 로그아웃 뒤 이동 화면과 캐시 초기화가 정의되어 있지 않다(FR-40은 갱신 실패 시만 규정). FR-39가 말하는 비밀번호 변경 기능과 API는 FR·8장에 없다 | FR-39, FR-40 |
 | I-14 | 재생성 시 AI 수정 결과 | BR-34는 "수동 편집 초기화, AI 수정 카운트 유지"라고만 한다. AI 수정으로 바뀐 내용도 초기화되는지 모호하다 | BR-34, D-5, E-13 |
 | I-15 | 409 뒤 입력 보존 | version 충돌 409 뒤 프로젝트를 다시 조회할 때 사용자가 입력 중이던 텍스트를 보존할지 정의되어 있지 않다 | FR-34, PRD 7.1 |
-| I-16 | 퍼블리시 응답과 공개 사본 | DG-2는 커밋 → 공개 사본 생성 → 최종 HTML 응답 순서다. 사본 생성이 실패해 재시도하는 동안 응답의 이미지 URL 상태와 화면 반응이 정의되어 있지 않다 | FR-22, BR-66 |
+| I-16 | 퍼블리시 응답과 공개 사본 | 해소(구현). 응답의 최종 HTML은 공개 URL(`PUBLIC_IMAGE_BASE_URL/{assetId}.{ext}`)을 담고 사본 준비 여부와 무관하다. 사본 복사 실패는 3회 시도 뒤 로그만 남기고, 퍼블리시 재요청과 `GET /final`이 재시도한다. 사본 준비 전 화면 반응은 프론트 결정 | FR-22, BR-66 |
 | I-17 | 소셜 가입자 이메일 인증 | BR-04는 Credentials 가입자에만 적용되는데 FR-06은 모든 사용자에게 `email_verified=true`를 요구한다. 부분 해소(도메인 v0.3.3 BR-04, PRD v0.3.2 FR-02): OAuth 가입자는 가입 시 true. 남은 쟁점은 Provider가 이메일을 주지 않아 직접 입력한 이메일(Kakao·Naver, C)의 인증 경로다 | BR-04, FR-02, FR-06 |
 | I-18 | 확장 미설치 감지 | 확장이 없거나 데스크톱 Chrome이 아닐 때 이를 감지해 복사로 안내하는 방법이 정의되어 있지 않다 | BR-65, FR-24 |
 | I-19 | 충전 상품·도입 순서 | 충전 크레딧 수량·가격이 정의되어 있지 않다(Plan은 구독용이며 W). FR-08과 FR-04가 모두 S라서 FR-04보다 결제가 먼저 도입되면 결제 사용자가 미인증 403에 걸린다 | FR-04, FR-08, PRD-D-7 |

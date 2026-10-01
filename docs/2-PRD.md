@@ -1,15 +1,15 @@
-# Coupang AI Detail Maker - PRD (v0.3.8 초안)
+# Coupang AI Detail Maker - PRD (v0.3.9 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 제품 요구사항 정의서(PRD) |
-| 버전 | v0.3.8 (초안) |
+| 버전 | v0.3.9 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.9 |
-| 참조 문서 | `prompts/PRD생성.md` (PRD 작성 지침, 우선 적용), `docs/1-domain-definition.md` (도메인 정의서 v0.3.9), `valuate/1-domain-definition-v0.2-evaluation.md` (도메인 평가 38/50) |
+| 기준 도메인 정의서 버전 | v0.3.10 |
+| 참조 문서 | `prompts/PRD생성.md` (PRD 작성 지침, 우선 적용), `docs/1-domain-definition.md` (도메인 정의서 v0.3.10), `valuate/1-domain-definition-v0.2-evaluation.md` (도메인 평가 38/50) |
 | 우선순위 원칙 | PRD 지침과 도메인 정의서가 충돌하면 PRD 지침을 따른다. v0.1의 충돌 목록(10장)은 도메인 v0.3에서 모두 반영됐다 |
 
 **표기 규약**
@@ -23,6 +23,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.3.9 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.10 | 백엔드 구현 [가정] 반영: FR-14, FR-22(이미지 참조·공개 키·재시도 시점), 5.8 클레임(`iss`·`aud`), 7.2 표(`assertEligible(userId, db)`, 머리말의 도메인 버전), 7.3 문구, 8장(구현 확정 응답 문단), 11.1 PRD-R-12·PRD-R-13·PRD-R-14 신설 |
 | v0.3.8 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | DB-01~03 구현 후속 정합화: NFR-07(비밀값 스캔 패턴 `DATABASE_URL` → `postgresql://`), 7.2 표 머리말의 도메인 버전 |
 | v0.3.7 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. FR-06, FR-10, FR-21, 4.2 PG 결제 행, 5.8 클레임 문구, 7.2 표, 7.3 SQL, 7.5 다이어그램, 9장 P2 1~2일 차, 10장 #7 |
 | v0.3.6 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.7 | 문서 간 정합성 재점검 반영: FR-06(자격 검사 대상에 폼 저장 추가, DEC-05·FR-10), 4.2 제목·PG 결제 행, 7.2 표 머리말의 도메인 버전, PRD-R-6(M3 → M4), 11.2 PRD-D-6·PRD-D-7 기한(P1 1일 차 명시) |
@@ -151,7 +152,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 
 | FR | 우선 | 설명 | BR | 수용 기준 |
 |---|---|---|---|---|
-| FR-14 | M | MAIN 모델로 상세페이지 생성. 폼 필수값 검증. 출력은 루트 폭 780px, **인라인 CSS 전용**(class 스타일 의존 금지), `<script>`·`<link>`·`<style>` 금지, 최상위 섹션마다 `data-block-id`, 편집 대상 텍스트 요소마다 블록 내 고유 `data-edit-id`(FR-17). 서버가 출력을 검증하고 금지 요소를 제거하며 `data-edit-id`를 부여. 이 속성들은 draftHtml용이며 최종 HTML에서는 제거(FR-22) | BR-30, 31, 35, 37 | AC-BR35. 결과에 script·link·style 0개, class 속성 0개, 모든 섹션에 data-block-id |
+| FR-14 | M | MAIN 모델로 상세페이지 생성. 폼 필수값 검증. 출력은 루트 폭 780px, **인라인 CSS 전용**(class 스타일 의존 금지), `<script>`·`<link>`·`<style>` 금지, 최상위 섹션마다 `data-block-id`, 편집 대상 텍스트 요소마다 블록 내 고유 `data-edit-id`(FR-17). 서버가 출력을 검증하고 금지 요소를 제거하며 `data-edit-id`를 부여. 이미지는 `<img src="asset:{assetId}">` 참조만 허용하고(그 외 `src`의 img는 제거, 원본 키·URL은 draftHtml에 넣지 않음), 서버가 프리뷰·최종 HTML에서 실제 URL로 바꾼다. 이 속성들은 draftHtml용이며 최종 HTML에서는 제거(FR-22) | BR-30, 31, 35, 37 | AC-BR35. 결과에 script·link·style 0개, class 속성 0개, 모든 섹션에 data-block-id |
 | FR-15 | M | 재생성(프로젝트당 3회, 조건부 원자 UPDATE로 선점하고 실패하면 복원). 재생성은 차감하지 않는다. 진행 중 작업 제한은 FR-35 | BR-11, BR-34, BR-47 | AC-BR34 |
 | FR-16 | M | 서버 프리뷰 합성: draftHtml의 이미지를 프리뷰 사본으로 바꾸고, 최상단 사선 오버레이와 블록별 반복 워터마크를 넣는다. 클라이언트는 프리뷰를 `sandbox` iframe(스크립트 불가)으로 렌더링. 프리뷰 이미지는 서버가 비공개 버킷의 390px 사본(`preview_key`)을 읽어 `data:image/webp;base64,...`로 프리뷰 HTML에 인라인한다(sandbox iframe은 인증 헤더를 못 보내고, 서명 URL은 비공개 버킷 URL을 응답에 노출하므로 쓰지 않는다. D-21). 프리뷰 응답에는 편집용 `blocks`도 포함한다(FR-17) | BR-32, 50, 51, 53, 54 | AC-BR50, AC-BR51, AC-BR54, PRD-V-4 |
 | FR-17 | M | 블록 텍스트 수동 편집. 서버가 생성 결과 정제 시 편집 대상 텍스트 요소에 블록 내 고유 `data-edit-id`를 부여하고, 프리뷰 응답에 `blocks: [{blockId, fields: [{editId, text}]}]`를 함께 반환한다. 에디터는 우측 패널 목록에서 블록·필드를 골라 편집한다(iframe 안 클릭 선택 없음). 클라이언트는 `{blockId, editId, text, version}`만 보내고 서버가 해당 요소의 텍스트 노드만 바꿔 draftHtml에 적용한 뒤 새 프리뷰를 반환. HTML 전체 덮어쓰기는 거절 | BR-40, 44 | AC-BR40. payload에 HTML 태그가 있으면 400 |
@@ -166,7 +167,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 | FR | 우선 | 설명 | BR | 수용 기준 |
 |---|---|---|---|---|
 | FR-21 | M | 퍼블리시 TX(pg `BEGIN`~`COMMIT`): 프로젝트 행 `FOR UPDATE` 잠금 → 이미 PUBLISHED면 기존 결과 반환, 아니면 이메일 인증(403)·잔액(402) 선검사 → version·진행 중 작업 확인(FR-34, FR-35) → DEDUCT 원장 INSERT(부분 유니크 인덱스, `ON CONFLICT DO NOTHING`) → 잔액 차감(CHECK ≥ 0) → finalHtml 저장·PUBLISHED 전이 → PublishRecord 생성. 하나라도 실패하면 `ROLLBACK` | BR-11~15, 39, 48, 52, P-5 | AC-BR11, 12, 13, 14. 잔액 0이면 402(version 불일치여도 402) |
-| FR-22 | M | WING 호환 최종 HTML: 워터마크와 편집기 전용 속성(`data-edit-id`, `data-block-id`)을 제거하고(draftHtml에는 유지), 원본 이미지를 **만료되지 않는 공개 URL**(추측할 수 없는 UUID 경로)로 복사해 참조한다. 서명 URL은 쓰지 않는다. 퍼블리시 TX가 커밋된 뒤에만 공개 사본을 만들고(PublicImagesCopied), 실패하면 재시도하며 크레딧은 유지 | BR-52, BR-66, D-12, R-7 | AC-BR52, AC-BR66(퍼블리시 전 공개 사본 0건, 30일 뒤 이미지 200) |
+| FR-22 | M | WING 호환 최종 HTML: 워터마크와 편집기 전용 속성(`data-edit-id`, `data-block-id`)을 제거하고(draftHtml에는 유지), 원본 이미지를 **만료되지 않는 공개 URL**(추측할 수 없는 UUID 경로)로 복사해 참조한다. 공개 키는 `{assetId}.{ext}`(ext: jpg·png·webp), 최종 HTML의 img는 `PUBLIC_IMAGE_BASE_URL/{assetId}.{ext}`다. 서명 URL은 쓰지 않는다. 퍼블리시 TX가 커밋된 뒤에만 공개 사본을 만들고(PublicImagesCopied), 실패하면 3회까지 시도한 뒤 로그만 남기고 크레딧은 유지한다. 실패한 사본은 퍼블리시 재요청(PUBLISHED 포함)과 `GET /final`이 응답 전에 다시 시도하며, 응답은 사본 준비 여부와 무관하게 최종 HTML이다 | BR-52, BR-66, D-12, R-7 | AC-BR52, AC-BR66(퍼블리시 전 공개 사본 0건, 30일 뒤 이미지 200) |
 | FR-23 | M | 최종 HTML 클립보드 복사 버튼과 WING 붙여넣기 안내 | BR-62, 65 | 복사 후 잔액 불변, 재복사 무제한 |
 | FR-24 | S | 확장 토큰 발급(PUBLISHED 1건 범위, 10분 만료). 확장 토큰은 별도 비밀키로 서명한 JWT(`typ=ext`, `sub`=userId, `prj`=projectId)이며 최종 HTML 조회와 결과 보고에만 쓸 수 있다. Refresh Token은 발급하지 않는다. 웹 페이지가 `chrome.runtime.sendMessage`(externally_connectable)로 확장에 전달 | BR-60 | AC-BR60 |
 | FR-25 | S | Chrome 확장(MV3): WING 상품등록 페이지의 상세설명 에디터 DOM에만 주입, 결과를 `/api/projects/:id/publish-report`로 보고, 실패하면 클립보드 폴백. 비밀값 없음. 등록 제출은 사용자가 직접 | BR-61, 62, 63, 64, 65 | AC-BR61, 63, 64, 65 |
@@ -197,7 +198,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 |---|---|---|
 | 형식 | JWT, `HS256`, 라이브러리 `jsonwebtoken` | JWT, `HS256`, 라이브러리 `jsonwebtoken` |
 | 서명 키 | `JWT_ACCESS_SECRET` (백엔드 환경변수, 32바이트 이상 난수) | `JWT_REFRESH_SECRET` (Access용과 다른 키) |
-| 클레임 | `sub`(userId), `typ=access`, `iss`, `aud`, `iat`, `exp` | `sub`(userId), `typ=refresh`, `jti`, `fam`(토큰 패밀리 ID), `iss`, `aud`, `iat`, `exp` |
+| 클레임 | `sub`(userId), `typ=access`, `iss`, `aud`, `iat`, `exp` | `sub`(userId), `typ=refresh`, `jti`, `fam`(토큰 패밀리 ID), `iss`, `aud`, `iat`, `exp` (`iss`·`aud`는 둘 다 `cal-todo`, 구현이 정한 값) |
 | 만료 `[가정]` | 15분 | 14일(회전할 때마다 새 14일. 패밀리 최초 발급 후 최대 30일) |
 | 전달 | 응답 body `{accessToken, expiresIn}` → 요청마다 `Authorization: Bearer` 헤더 | `Set-Cookie: rt=<JWT>; HttpOnly; Secure; SameSite=Strict; Path=/api/auth` |
 | 클라이언트 보관 | 메모리(Zustand 인증 슬라이스)만. localStorage·sessionStorage 금지 | httpOnly 쿠키라 JS가 읽을 수 없음 |
@@ -265,9 +266,9 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 
 ### 7.2 백엔드 구조 (도메인 개념 대응)
 
-| 도메인 정의서 v0.3.9 | PRD(Express) |
+| 도메인 정의서 v0.3.10 | PRD(Express) |
 |---|---|
-| 인증 미들웨어 / 자격 검사(P-3) | `requireAuth`(Bearer JWT: Access Token 또는 확장 토큰, 인증만) + 자격 판정 함수 `assertEligible(user)`(FR-06). 프로젝트 대상 API는 서비스가 프로젝트 조회 직후, `POST /api/projects`는 라우트에서 호출한다 |
+| 인증 미들웨어 / 자격 검사(P-3) | `requireAuth`(Bearer JWT: Access Token 또는 확장 토큰, 인증만) + 자격 판정 함수 `assertEligible(userId, db)`(FR-06, DB 조회형, 퍼블리시 TX 안에서는 같은 client로 재사용). 프로젝트 대상 API는 서비스가 프로젝트 조회 직후, `POST /api/projects`는 라우트에서 호출한다 |
 | Routes(DG-3) | Express Router: `routes/auth`, `projects`, `analyze`, `generate`, `edit`, `publish` |
 | pg 트랜잭션(P-5) | `pg` 트랜잭션 함수(`withTx(fn)` 하나) |
 | 사용 한도 선점·진행 중 작업(BR-39, BR-47) | `UPDATE projects SET regen_count = regen_count + 1, active_job_type='REGEN', active_job_started_at=now() WHERE id=$1 AND version=$2 AND active_job_type IS NULL AND regen_count < 3 RETURNING *` (0행이면 원인에 따라 409 또는 429) |
@@ -293,7 +294,7 @@ UPDATE projects SET status='PUBLISHED', final_html=$3, version=version+1, publis
 INSERT INTO publish_records(project_id, final_html_hash, inject_status) VALUES ($1, $4, 'PENDING');
 COMMIT;
 ```
-공개 이미지 복사(FR-22, BR-66)는 COMMIT 뒤에 실행한다. 복사가 실패하면 재시도하며 이미 차감한 크레딧은 유지한다. 구독 크레딧 우선 차감(BR-16)은 구독 도입 때 추가한다.
+공개 이미지 복사(FR-22, BR-66)는 COMMIT 뒤에 실행한다. 복사가 실패하면(3회 시도 뒤 로그만) 이미 차감한 크레딧은 유지하고 퍼블리시 재요청·`GET /final`이 재시도한다. 구현은 선검사 뒤 status가 GENERATED·EDITING이 아니면 409 `INVALID_STATE`(DRAFT·ANALYZED 퍼블리시)를 준다. 구독 크레딧 우선 차감(BR-16)은 구독 도입 때 추가한다.
 
 ### 7.4 핵심 테이블 (PostgreSQL 17)
 
@@ -394,6 +395,8 @@ flowchart LR
 | POST /api/billing/checkout, /webhook | 충전 결제, PG 웹훅(서명 검증) | Access Token / 서명 | FR-08 |
 | GET /healthz | 헬스체크 | - | NFR-12 |
 
+**구현 확정 응답(백엔드 BE-01b~BE-15)**: `signup` 201, `login`·`refresh` 200(둘 다 body `{accessToken, expiresIn}`), `logout` 204(`rt`가 없거나 무효여도 204). 중복 이메일 가입과 USP 0개 저장은 400 `VALIDATION_FAILED`. 업로드는 multipart 필드 `file` 1장, 성공 201 `{id}`. 분석 body `{url, version}`, 편집 body는 키가 정확히 `blockId, editId, text, version` 4개. `GET /preview`는 `{version, html, blocks}`, 생성 전(draft 없음) 요청과 GENERATED·EDITING이 아닌 상태의 퍼블리시는 409 `INVALID_STATE`. uuid 형식이 아닌 프로젝트 id는 404. `GET /healthz`는 200 `{status:'ok'}` / 503 `{status:'unavailable'}`.
+
 ---
 
 ## 9. 일정 (1인, P1 2일 + P2 5일)
@@ -468,6 +471,9 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다(4.1, 4.2). Task
 | PRD-R-9 | 지정 모델 지원 종료 | 중 | 착수 시 현행 모델 ID로 설정 | R-5, D-10 |
 | PRD-R-10 | 생성 중 서버 재시작으로 선점 카운트·진행 중 작업 표시가 남음 | 중 | D-30(5분) 경과한 선점을 주기 작업이 복원하고 작업 표시 해제(FR-35) | R-10, D-30, BR-47 |
 | PRD-R-11 | 크롤링의 쿠팡 약관·저작권 문제 | 높음 | 도메인 대응 유지(단건, 미저장, 요약만). 유료 출시 전 법률 검토 | R-3, D-8 |
+| PRD-R-12 | Refresh 패밀리 30일 상한을 가장 오래된 행의 `created_at`으로 판정해, 일 1회 정리 job이 그 행을 지우면 상한이 늘어날 수 있음(`ponytail:` 주석) | 낮음 | MVP는 수용(코드 주석의 개선안: 회전 시 패밀리 시작 시각 상속) | FR-37, FR-38, ERD 4.3 |
+| PRD-R-13 | 계정 일일 LLM 상한(D-28)을 `llm_usage_logs` 건수 조회 뒤 호출하는 비원자 방식으로 판정해, 동시 요청이면 상한을 소폭 넘을 수 있음(`ponytail:` 주석). 프로젝트 선점이 프로젝트당 1건으로 묶어 폭이 제한됨 | 낮음 | MVP는 수용(코드 주석의 한계 그대로) | FR-29, D-28, BR-75 |
+| PRD-R-14 | 업로드 중 400·실패·동시 업로드 경쟁이면 이미 올린 스토리지 객체가 DB 행 없이 남음(고아 객체, `ponytail:` 주석) | 낮음 | MVP는 수용(코드 주석: 정리 job은 필요해지면) | FR-11, D-19 |
 
 ### 11.2 미결정 사항
 

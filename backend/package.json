@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node --env-file=.env src/server.js",
     "dev": "node --watch --env-file=.env src/server.js",
     "migrate": "node --env-file=.env scripts/migrate.js",
     "grant": "node --env-file=.env scripts/grant.js",
@@ -10,6 +11,18 @@
     "test:coverage": "node --env-file=.env.test scripts/migrate.js && node --env-file=.env.test --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=\"src/**/*.js\" --test-coverage-include=\"scripts/**/*.js\" --test-coverage-lines=90"
   },
   "dependencies": {
-    "pg": "^8.23.0"
+    "@ai-sdk/anthropic": "^4.0.71",
+    "@ai-sdk/google": "^4.0.87",
+    "@aws-sdk/client-s3": "^3.1144.0",
+    "ai": "^7.0.126",
+    "bcrypt": "^6.0.0",
+    "cheerio": "^1.2.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "pg": "^8.23.0",
+    "sharp": "^0.35.5"
   }
 }

@@ -1,14 +1,14 @@
-# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.11 초안)
+# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.17 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 작업 실행 계획(WBS) |
-| 버전 | v0.1.11 (초안) |
+| 버전 | v0.1.17 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 문서 버전 | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
+| 기준 문서 버전 | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10, ERD v0.1.10, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
 | 범위 | MVP(M) Task 분해·의존·일정. M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다. S/C는 8장에 요약 |
 
 ### 문서 변경 이력
@@ -18,6 +18,12 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.17 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10, ERD v0.1.10 | 백엔드 구현 [가정] 반영(체크박스 변경 없음): 3장 미정 사항 표(E-13, I-10·I-12·N-10, I-16, 이미지 참조 형식), BE-01a(의존성 문구), BE-02b(리밋 순서), BE-03b(`assertEligible(userId, db)`), BE-07a(`src`), BE-07b(`asset:{uuid}`), BE-14b(공개 키·재시도 시점), 9.1 PRD-R-12·13·14 |
+| v0.1.16 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | 배치 B4(BE-12·13·15) 완료 조건 체크. `npm test` 168/168(2회 연속), 라인 커버리지 97.66%. 크롤러는 로컬 HTTP 서버·mock으로 검증(실제 쿠팡 크롤링은 OPS-02). BE-01b~BE-15 M Task 전부 완료 |
+| v0.1.15 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | 배치 B3(BE-06·09b·10b·11·14b) 완료 조건 체크. `npm test` 148/148, 라인 커버리지 98.14%. 스토리지는 로컬 드라이버로 검증(실제 R2는 OPS-01). BE-10b 프리뷰 응답 크기 측정값 기록 |
+| v0.1.14 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | 배치 B2(BE-05a·09a·10a·14a·03b·05b) 완료 조건 체크. `npm test` 120/120, 라인 커버리지 98.49%. P1 슬라이스가 API로 끝까지 동작(가입→지급→로그인→프로젝트→생성→프리뷰→퍼블리시→final). BE-09a LY-03은 코드 확인(generate.js에 withTx 없음) |
+| v0.1.13 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | 배치 B1(BE-01b·02a·02b·03a·04·07a·07b·08a·08b) 완료 조건 체크. `npm test` 84/84, 라인 커버리지 98.85%. BE-08a ① provider 전환은 키 없이 모델 해석 수준까지 검증(실제 호출은 OPS-02) |
+| v0.1.12 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | BE-01a 완료 조건 체크(`npm test` 36/36, 라인 커버리지 97.62%, `npm run dev` 기동·자동 재시작 확인). 의존성은 express만 추가, jsonwebtoken·bcrypt·cookie-parser는 사용 Task에서 추가 |
 | v0.1.11 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | DB-01~03 구현 후속 정합화: DB-03(server.js 연결 이월 표기), BE-01a(기존 파일 확장, server.js 잡 시작·종료, 완료 조건 2개 추가), BE-09b(복원 통합 확인 완료 조건 1개 추가), OPS-02 비밀값 스캔 완료 조건(`postgresql://`) |
 | v0.1.10 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.8, 아키텍처 v0.1.8, ERD v0.1.8 | DB-01~DB-03 완료 조건 체크(backend 구현, `npm test` 25/25 통과, 라인 커버리지 98.53%). DB-03의 server.js 연결은 BE-01a로 이월 |
 | v0.1.9 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.8, 아키텍처 v0.1.8, ERD v0.1.8 | DB-01: Docker 대신 로컬 설치 PostgreSQL 17 서버에 테스트 DB `cal-todo-test`를 별도 생성(QA-02 v0.1.8과 일치) |
@@ -83,11 +89,11 @@
 | C-6 업로드 요청 단위 | 요청당 1장(구조 원칙 제안) | BE-06, FE-04b |
 | C-7 생성 API 응답 방식 | 동기 응답(최대 90초) 전제 | BE-09a, FE-05a |
 | PRD-D-6, PRD-D-7 | 관리자 수동 지급만, 지급 시 `email_verified=true` | DB-02 |
-| E-13 재생성 시 edit_operations | 행은 기록으로 남김(제안) | BE-11 |
+| E-13 재생성 시 edit_operations | 행은 기록으로 남김(제안). 구현 확정, ERD E-13 해소 | BE-11 |
 | E-7 USP 후보에 리뷰 원문 포함 | 저장 전 검사 여부 미정 | BE-13 |
-| I-10 USP 0개 저장, I-12 중복 이메일, N-10 가입 입력 규칙 | 문서 현재안 없음. 최소 동작으로 구현 후 문서에 역반영 요청 | BE-03a, BE-13, FE-03a |
-| I-16 공개 사본 준비 전 화면 | 문서 현재안 없음 | BE-14b, FE-08b |
-| draftHtml의 이미지 참조 형식 | 문서에 없음. BE-07b에서 형식 1개를 정하고 문서에 역반영 요청(원본 키·URL을 draftHtml에 넣지 않음, BR-32) | BE-07b, BE-09b, BE-10b, BE-14b |
+| I-10 USP 0개 저장, I-12 중복 이메일, N-10 가입 입력 규칙 | 문서 현재안 없음. 최소 동작으로 구현 후 문서에 역반영 요청. 구현·역반영 완료: 0개 저장 400, 중복 이메일 400 `VALIDATION_FAILED`, 이메일 소문자 정규화·비밀번호 8자~72바이트 | BE-03a, BE-13, FE-03a |
+| I-16 공개 사본 준비 전 화면 | 문서 현재안 없음. 서버 동작은 구현·역반영 완료(응답은 사본과 무관, 재시도는 퍼블리시 재요청·`GET /final`). 화면은 프론트 결정 | BE-14b, FE-08b |
+| draftHtml의 이미지 참조 형식 | 문서에 없음. BE-07b에서 형식 1개를 정하고 문서에 역반영 요청(원본 키·URL을 draftHtml에 넣지 않음, BR-32). 정함: `<img src="asset:{uuid}">`, 공개 키 `{assetId}.{ext}`(PRD FR-14·FR-22, 구조 원칙 OP-07에 역반영) | BE-07b, BE-09b, BE-10b, BE-14b |
 | N-1 랜딩 카피, N-3·N-4 목록 필드·카테고리, N-8·N-9 퍼블리시 문구·최종 HTML 표현, I-3 402·403 안내 문구 | 문서 현재안 없음. 자리 문구로 구현 | FE-03b, FE-04a, FE-04b, FE-08a, FE-08b, FE-09 |
 | PRD-R-9 모델 ID | 착수 시 현행 모델 ID로 환경변수 설정 | BE-08a |
 
@@ -102,30 +108,30 @@ P1 Task는 P1 Task만 선행으로 둔다(P2 역의존 없음). P2 Task의 선�
 | DB-01 | 스키마 이관(001_init.sql)과 마이그레이션 스크립트 | DB | M | P1 | DEC-04(결정됨) | 1일 차 오전 | 1h | [x] |
 | DB-02 | 운영자 크레딧 지급 스크립트 | DB | M | P1 | BE-01a | 1일 차 오전 | 0.5h | [x] |
 | DB-03 | 주기 작업: 선점 만료 복원·refresh 만료 삭제·원장 대사 | DB | M | P2 | BE-09b | P2 3일 차 | 1h | [x] |
-| BE-01a | 백엔드 골격·설정·오류 처리·헬스체크 | BE | M | P1 | DB-01 | 1일 차 오전 | 1h | [ ] |
-| BE-01b | 요청 로그·종료 처리 | BE | M | P2 | BE-01a | P2 1일 차 | 0.5h | [ ] |
-| BE-02a | JWT 모듈·requireAuth | BE | M | P1 | BE-01a, DEC-03(결정됨) | 1일 차 오전 | 0.5h | [ ] |
-| BE-02b | 레이트 리밋 | BE | M | P2 | BE-02a | P2 1일 차 | 0.5h | [ ] |
-| BE-03a | 가입·로그인·`/api/me` | BE | M | P1 | BE-02a, DB-02, DEC-09(결정됨) | 1일 차 오전 | 1h | [ ] |
-| BE-03b | assertEligible 자격 판정과 적용 | BE | M | P2 | BE-09a | P2 1일 차 | 0.5h | [ ] |
-| BE-04 | Refresh 회전·재사용 탐지·로그아웃 | BE | M | P2 | BE-03a | P2 1일 차 | 1.5h | [ ] |
-| BE-05a | 프로젝트 생성(form 포함)·상세 | BE | M | P1 | BE-03a, DEC-05(결정됨) | 1일 차 오후 | 0.5h | [ ] |
-| BE-05b | 폼 저장·목록 | BE | M | P2 | BE-03b | P2 1일 차 | 0.5h | [ ] |
-| BE-06 | 스토리지·이미지 업로드·프리뷰 사본 | BE | M | P2 | BE-03b, DEC-03(결정됨), DEC-07(결정됨) | P2 1일 차 | 2h | [ ] |
-| BE-07a | HTML 모듈: 정제·워터마크 | BE | M | P1 | BE-01a, DEC-03(결정됨) | 1일 차 오후 | 1h | [ ] |
-| BE-07b | HTML 모듈: 편집 ID·이미지 교체 | BE | M | P2 | BE-07a | P2 1일 차 | 1h | [ ] |
-| BE-08a | LLM 어댑터: Role·mock·타임아웃 | BE | M | P1 | BE-01a, DEC-09(결정됨) | 1일 차 오후 | 1h | [ ] |
-| BE-08b | LLM 어댑터: 상한·세마포어·사용량 로그 | BE | M | P2 | BE-08a, DEC-10(결정됨) | P2 1일 차 | 1.5h | [ ] |
-| BE-09a | 생성(분석 생략, 텍스트 중심) | BE | M | P1 | BE-05a, BE-07a, BE-08a | 1일 차 오후 | 1h | [ ] |
-| BE-09b | 진행 중 작업 선점·이미지 필수값 | BE | M | P2 | BE-06, BE-07b, BE-08b | P2 2일 차 | 1h | [ ] |
-| BE-10a | 서버 프리뷰 합성(워터마크) | BE | M | P1 | BE-09a | 1일 차 오후 | 0.5h | [ ] |
-| BE-10b | 프리뷰 이미지 data URI·편집 blocks | BE | M | P2 | BE-10a, BE-09b, DEC-01(결정됨), DEC-08(결정됨) | P2 2일 차 | 1h | [ ] |
-| BE-11 | 재생성 | BE | M | P2 | BE-09b | P2 2일 차 | 1h | [ ] |
-| BE-12 | 수동 편집·version 잠금·읽기 전용 | BE | M | P2 | BE-10b, DEC-08(결정됨) | P2 3일 차 | 1.5h | [ ] |
-| BE-13 | 경쟁사 분석·USP 저장 | BE | M | P2 | BE-09b, DEC-09(결정됨) | P2 3일 차 | 2.5h | [ ] |
-| BE-14a | 퍼블리시 TX·최종 HTML | BE | M | P1 | BE-09a | 2일 차 오전 | 2.5h | [ ] |
-| BE-14b | 공개 이미지 사본 | BE | M | P2 | BE-14a, BE-06, BE-07b | P2 2일 차 | 1h | [ ] |
-| BE-15 | 콘텐츠 유출·자격 통합 테스트 | BE | M | P2 | BE-11, BE-12, BE-13, BE-14b | P2 4일 차 | 1h | [ ] |
+| BE-01a | 백엔드 골격·설정·오류 처리·헬스체크 | BE | M | P1 | DB-01 | 1일 차 오전 | 1h | [x] |
+| BE-01b | 요청 로그·종료 처리 | BE | M | P2 | BE-01a | P2 1일 차 | 0.5h | [x] |
+| BE-02a | JWT 모듈·requireAuth | BE | M | P1 | BE-01a, DEC-03(결정됨) | 1일 차 오전 | 0.5h | [x] |
+| BE-02b | 레이트 리밋 | BE | M | P2 | BE-02a | P2 1일 차 | 0.5h | [x] |
+| BE-03a | 가입·로그인·`/api/me` | BE | M | P1 | BE-02a, DB-02, DEC-09(결정됨) | 1일 차 오전 | 1h | [x] |
+| BE-03b | assertEligible 자격 판정과 적용 | BE | M | P2 | BE-09a | P2 1일 차 | 0.5h | [x] |
+| BE-04 | Refresh 회전·재사용 탐지·로그아웃 | BE | M | P2 | BE-03a | P2 1일 차 | 1.5h | [x] |
+| BE-05a | 프로젝트 생성(form 포함)·상세 | BE | M | P1 | BE-03a, DEC-05(결정됨) | 1일 차 오후 | 0.5h | [x] |
+| BE-05b | 폼 저장·목록 | BE | M | P2 | BE-03b | P2 1일 차 | 0.5h | [x] |
+| BE-06 | 스토리지·이미지 업로드·프리뷰 사본 | BE | M | P2 | BE-03b, DEC-03(결정됨), DEC-07(결정됨) | P2 1일 차 | 2h | [x] |
+| BE-07a | HTML 모듈: 정제·워터마크 | BE | M | P1 | BE-01a, DEC-03(결정됨) | 1일 차 오후 | 1h | [x] |
+| BE-07b | HTML 모듈: 편집 ID·이미지 교체 | BE | M | P2 | BE-07a | P2 1일 차 | 1h | [x] |
+| BE-08a | LLM 어댑터: Role·mock·타임아웃 | BE | M | P1 | BE-01a, DEC-09(결정됨) | 1일 차 오후 | 1h | [x] |
+| BE-08b | LLM 어댑터: 상한·세마포어·사용량 로그 | BE | M | P2 | BE-08a, DEC-10(결정됨) | P2 1일 차 | 1.5h | [x] |
+| BE-09a | 생성(분석 생략, 텍스트 중심) | BE | M | P1 | BE-05a, BE-07a, BE-08a | 1일 차 오후 | 1h | [x] |
+| BE-09b | 진행 중 작업 선점·이미지 필수값 | BE | M | P2 | BE-06, BE-07b, BE-08b | P2 2일 차 | 1h | [x] |
+| BE-10a | 서버 프리뷰 합성(워터마크) | BE | M | P1 | BE-09a | 1일 차 오후 | 0.5h | [x] |
+| BE-10b | 프리뷰 이미지 data URI·편집 blocks | BE | M | P2 | BE-10a, BE-09b, DEC-01(결정됨), DEC-08(결정됨) | P2 2일 차 | 1h | [x] |
+| BE-11 | 재생성 | BE | M | P2 | BE-09b | P2 2일 차 | 1h | [x] |
+| BE-12 | 수동 편집·version 잠금·읽기 전용 | BE | M | P2 | BE-10b, DEC-08(결정됨) | P2 3일 차 | 1.5h | [x] |
+| BE-13 | 경쟁사 분석·USP 저장 | BE | M | P2 | BE-09b, DEC-09(결정됨) | P2 3일 차 | 2.5h | [x] |
+| BE-14a | 퍼블리시 TX·최종 HTML | BE | M | P1 | BE-09a | 2일 차 오전 | 2.5h | [x] |
+| BE-14b | 공개 이미지 사본 | BE | M | P2 | BE-14a, BE-06, BE-07b | P2 2일 차 | 1h | [x] |
+| BE-15 | 콘텐츠 유출·자격 통합 테스트 | BE | M | P2 | BE-11, BE-12, BE-13, BE-14b | P2 4일 차 | 1h | [x] |
 | FE-01a | 프론트 골격(SPA, 라우터, Query, 인증 스토어) | FE | M | P1 | DEC-03(결정됨) | 2일 차 오전 | 0.5h | [ ] |
 | FE-01b | 멀티 페이지·noindex·Query 공통 처리 | FE | M | P2 | FE-01a | P2 2일 차 | 0.5h | [ ] |
 | FE-02a | API client | FE | M | P1 | FE-01a | 2일 차 오전 | 0.5h | [ ] |
@@ -355,7 +361,7 @@ flowchart LR
 - 관련: NFR-05, NFR-07, NFR-12, NFR-18, OP-01, OP-02, OP-08, OP-12, LY-01~05, NM-11, QA-01, PP-09
 - 수행 작업:
   - DB-01~02가 이미 만든 `package.json`·`src/config.js`·`src/db.js`를 확장한다(새로 만들지 않음).
-  - 의존성 `express`, `pg`, `jsonwebtoken`, `bcrypt`, `cookie-parser`(PRD 7.1) 추가. `start` 스크립트 추가(`test`는 이미 있음).
+  - 의존성은 `express`만 추가한다. `jsonwebtoken`, `bcrypt`, `cookie-parser` 등 나머지는 사용하는 Task에서 설치한다(실제 설치 목록: `ai`, `@ai-sdk/google`, `@ai-sdk/anthropic`, `@aws-sdk/client-s3`, `bcrypt`, `cheerio`, `cookie-parser`, `express`, `express-rate-limit`, `jsonwebtoken`, `multer`, `pg`, `sharp`. 구조 원칙 3.5와 일치). `start` 스크립트 추가(`test`는 이미 있음).
   - `config.js`(확장): 필수 변수·JWT 키 32바이트 검사 후 실패 시 즉시 종료, D 수치 상수와 D-ID 주석. LLM·스토리지 키는 백엔드 환경변수에서만 읽는다(NFR-07).
   - `db.js`(확장): Pool `max=20`, `statement_timeout` 5초, `query`, `withTx`는 DB-01~02에서 구현됨.
   - `lib/errors.js`(AppError), 미들웨어 `error-handler`. CORS 미들웨어는 두지 않는다(단일 도메인·동일 출처, DEC-02).
@@ -363,14 +369,14 @@ flowchart LR
   - `server.js`: listen 뒤 `startJobs()`, SIGTERM 시 `stopJobs()` 후 서버 종료(DB-03에서 이월).
   - `.env.example`(6.1절 M 키), `.gitignore`.
 - 완료 조건:
-  - [ ] `npm run dev`로 서버 기동, `src` 파일 수정 시 자동 재시작
-  - [ ] 서버 시작 시 `startJobs()` 호출, SIGTERM 시 `stopJobs()` 후 정상 종료
-  - [ ] `npm test`: `app.listen(0)` 기반 `/healthz` 200, DB 중단 시 503
-  - [ ] `JWT_ACCESS_SECRET` 31바이트로 시작 → 즉시 종료
-  - [ ] 없는 경로 404 `{error:{code:"NOT_FOUND"}}`, 처리되지 않은 오류 500 `INTERNAL`(스택 미노출)
-  - [ ] 어떤 Origin의 요청에도 CORS 허용 헤더(`Access-Control-Allow-*`) 없음
-  - [ ] `config.js` 밖 `process.env` 0건(grep)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] `npm run dev`로 서버 기동, `src` 파일 수정 시 자동 재시작
+  - [x] 서버 시작 시 `startJobs()` 호출, SIGTERM 시 `stopJobs()` 후 정상 종료 (Windows는 SIGTERM 핸들러를 실제 신호로 호출할 수 없어 `shutdown()` 직접 호출 테스트로 검증, SIGINT도 연결)
+  - [x] `npm test`: `app.listen(0)` 기반 `/healthz` 200, DB 중단 시 503
+  - [x] `JWT_ACCESS_SECRET` 31바이트로 시작 → 즉시 종료
+  - [x] 없는 경로 404 `{error:{code:"NOT_FOUND"}}`, 처리되지 않은 오류 500 `INTERNAL`(스택 미노출)
+  - [x] 어떤 Origin의 요청에도 CORS 허용 헤더(`Access-Control-Allow-*`) 없음
+  - [x] `config.js` 밖 `process.env` 0건(grep)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-01b 요청 로그·종료 처리
 - 우선순위: M · 단계: P2 · 추정: 0.5h · 구간: P2 1일 차 (BE-01 1.5h 중 0.5h)
@@ -381,8 +387,8 @@ flowchart LR
   - `server.js`에 SIGTERM → `server.close()` → `pool.end()`.
   - 루트 `.prettierrc`(`prettier` 승인됨, DEC-03).
 - 완료 조건:
-  - [ ] 요청 로그 1줄에 `reqId`·`status`·`ms` 있고 Authorization·쿠키·본문 없음
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] 요청 로그 1줄에 `reqId`·`status`·`ms` 있고 Authorization·쿠키·본문 없음
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-02a JWT 모듈·requireAuth
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 1일 차 오전 (BE-02 1h 중 0.5h)
@@ -392,20 +398,20 @@ flowchart LR
   - `services/auth.js` 토큰 함수: Access(`typ=access`, `iss`, `aud`, `JWT_ACCESS_TTL_SEC`), Refresh(`jti`, `fam`), 검증(`algorithms: ['HS256']`, `iss`·`aud`·`typ`).
   - `middleware/require-auth.js`: Bearer 검증만, DB 조회 없음. `typ=access` 외 거절(확장 토큰 허용 라우트는 S).
 - 완료 조건:
-  - [ ] [P0] JWT 검증: 만료 → 401 `TOKEN_EXPIRED`, `alg: none`·다른 키·`typ` 불일치(refresh·ext 토큰) → 401 `TOKEN_INVALID`(AC-BR03)
-  - [ ] requireAuth 통과 요청에서 DB 쿼리 0회
-  - [ ] 토큰 클레임에 이메일 인증 여부·잔액 없음(BR-06)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] JWT 검증: 만료 → 401 `TOKEN_EXPIRED`, `alg: none`·다른 키·`typ` 불일치(refresh·ext 토큰) → 401 `TOKEN_INVALID`(AC-BR03)
+  - [x] requireAuth 통과 요청에서 DB 쿼리 0회
+  - [x] 토큰 클레임에 이메일 인증 여부·잔액 없음(BR-06)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-02b 레이트 리밋
 - 우선순위: M · 단계: P2 · 추정: 0.5h · 구간: P2 1일 차 (BE-02 1h 중 0.5h)
 - 선행: BE-02a
 - 관련: NFR-04, OP-03
 - 수행 작업:
-  - `middleware/rate-limit.js`: 일반 사용자당 60/분, 로그인 IP당 10/분, refresh IP당 30/분 → 429 `RATE_LIMITED`.
+  - `middleware/rate-limit.js`: 일반 사용자당 60/분, 로그인 IP당 10/분, refresh IP당 30/분 → 429 `RATE_LIMITED`. 일반 리밋은 사용자당이라 `requireAuth` 뒤에 둔다(LY-05 반영). signup·logout은 리밋 없음.
 - 완료 조건:
-  - [ ] 1분 안 11번째 로그인 → 429 `RATE_LIMITED`
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] 1분 안 11번째 로그인 → 429 `RATE_LIMITED`
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-03a 가입·로그인·`/api/me`
 - 우선순위: M · 단계: P1 · 추정: 1h · 구간: 1일 차 오전 (BE-03 1.5h 중 1h)
@@ -416,23 +422,23 @@ flowchart LR
   - `POST /api/auth/login`: 실패 401 `INVALID_CREDENTIALS`, 성공 시 `refresh_tokens` 1행 + `rt` 쿠키 + body `{accessToken, expiresIn}`.
   - `GET /api/me`: `toMe` 매퍼(이메일, emailVerified, 잔액).
 - 완료 조건:
-  - [ ] [P1] AC-BR05: 가입 1회 → `users` 1행, `credit_wallets` 1행(잔액 0), `email_verified=false`
-  - [ ] 틀린 비밀번호 401, `refresh_tokens` 행 증가 0건
-  - [ ] FR-36: 로그인 응답에 accessToken, `rt` 쿠키 HttpOnly·Secure·SameSite=Strict·Path=/api/auth, DB 행 1건
-  - [ ] **1일 차 오전 완료 기준**: 로그인 → `GET /api/me` 잔액 0, DB-02 지급 후 잔액 n·emailVerified true
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P1] AC-BR05: 가입 1회 → `users` 1행, `credit_wallets` 1행(잔액 0), `email_verified=false`
+  - [x] 틀린 비밀번호 401, `refresh_tokens` 행 증가 0건
+  - [x] FR-36: 로그인 응답에 accessToken, `rt` 쿠키 HttpOnly·Secure·SameSite=Strict·Path=/api/auth, DB 행 1건
+  - [x] **1일 차 오전 완료 기준**: 로그인 → `GET /api/me` 잔액 0, DB-02 지급 후 잔액 n·emailVerified true
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-03b assertEligible 자격 판정과 적용
 - 우선순위: M · 단계: P2 · 추정: 0.5h · 구간: P2 1일 차 (BE-03 1.5h 중 0.5h)
 - 선행: BE-09a
 - 관련: FR-06, BR-04, BR-10, US-07, AC-BR04, AC-BR10, LY-06
 - 수행 작업:
-  - `services/eligibility.js`: `assertEligible(user)` 한 함수. `email_verified` 미충족 403 `EMAIL_NOT_VERIFIED`, 잔액 합계 < 1이면 402 `INSUFFICIENT_CREDIT`. 둘 다 미충족이면 403 우선(DEC-09). 미들웨어로 먼저 실행하지 않는다(LY-06).
+  - `services/eligibility.js`: `assertEligible(userId, db)` 한 함수(DB 조회형, 퍼블리시 TX 안에서도 같은 client로 재사용). `email_verified` 미충족 403 `EMAIL_NOT_VERIFIED`, 잔액 합계 < 1이면 402 `INSUFFICIENT_CREDIT`. 둘 다 미충족이면 403 우선(DEC-09). 미들웨어로 먼저 실행하지 않는다(LY-06).
   - 호출 위치: 프로젝트가 아직 없는 `POST /api/projects`(BE-05a)만 라우트에서 호출한다. 프로젝트 대상 API(`POST /api/projects/:id/generate`(BE-09a), P2의 BE-05b, BE-06, BE-11, BE-12, BE-13)는 서비스가 프로젝트를 조회한 직후 소유 404 → PUBLISHED 409 → `assertEligible`(403 → 402) → version·진행 중 작업 409 순으로 확인한다. 퍼블리시는 TX 안에서 같은 순서로 검사한다(BE-14a).
 - 완료 조건:
-  - [ ] [P1] 자격(`assertEligible` 단위 테스트): 미인증 403, 인증 + 잔액 0은 402, 미인증 + 잔액 0은 403(AC-BR04, AC-BR10, DEC-09)
-  - [ ] 잔액 0 사용자: 프로젝트 생성·생성 요청 402
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P1] 자격(`assertEligible` 단위 테스트): 미인증 403, 인증 + 잔액 0은 402, 미인증 + 잔액 0은 403(AC-BR04, AC-BR10, DEC-09)
+  - [x] 잔액 0 사용자: 프로젝트 생성·생성 요청 402
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-04 Refresh 회전·재사용 탐지·로그아웃
 - 우선순위: M · 단계: P2 · 추정: 1.5h · 구간: P2 1일 차
@@ -443,12 +449,12 @@ flowchart LR
   - 재사용 탐지: 폐기된 `rt` 제출 → 패밀리 전체 폐기, 401 `REFRESH_INVALID`.
   - `POST /api/auth/logout`: 패밀리 폐기, `rt` `Max-Age=0`.
 - 완료 조건:
-  - [ ] [P0] 갱신 응답의 새 `rt` ≠ 이전 값, 이전 `rt`로 다시 갱신 → 401(FR-37)
-  - [ ] [P0] 회전 전 토큰 재제출 → 같은 family 모든 행 `revoked_at` 기록, 최신 `rt`도 401(FR-38, AC-BR06)
-  - [ ] [P0] 로그아웃 후 갱신 401, 응답 쿠키 `Max-Age=0`(FR-39)
-  - [ ] 다른 Origin의 refresh·logout → 403 `ORIGIN_FORBIDDEN`
-  - [ ] 패밀리 `created_at`을 31일 전으로 둔 뒤 갱신 → 401
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] 갱신 응답의 새 `rt` ≠ 이전 값, 이전 `rt`로 다시 갱신 → 401(FR-37)
+  - [x] [P0] 회전 전 토큰 재제출 → 같은 family 모든 행 `revoked_at` 기록, 최신 `rt`도 401(FR-38, AC-BR06)
+  - [x] [P0] 로그아웃 후 갱신 401, 응답 쿠키 `Max-Age=0`(FR-39)
+  - [x] 다른 Origin의 refresh·logout → 403 `ORIGIN_FORBIDDEN`
+  - [x] 패밀리 `created_at`을 31일 전으로 둔 뒤 갱신 → 401
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-05a 프로젝트 생성(form 포함)·상세
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 1일 차 오후 (BE-05 1h 중 0.5h)
@@ -459,11 +465,11 @@ flowchart LR
   - `GET /api/projects/:id`(남의 프로젝트는 404).
   - `toProject` 화이트리스트 매퍼.
 - 완료 조건:
-  - [ ] AC-BR38: 생성 응답 `status=DRAFT`, `version=1`
-  - [ ] `GET /api/projects/:id` 응답에 `status`·`version`·`analyzeCount`·`regenCount`·`aiEditCount`·`aiEditFailCount`·`activeJobType` 포함
-  - [ ] 응답에 `draftHtml`·`finalHtml`·`originalKey`·`previewKey` 키 0건
-  - [ ] 다른 사용자 프로젝트 조회 → 404 `NOT_FOUND`
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] AC-BR38: 생성 응답 `status=DRAFT`, `version=1`
+  - [x] `GET /api/projects/:id` 응답에 `status`·`version`·`analyzeCount`·`regenCount`·`aiEditCount`·`aiEditFailCount`·`activeJobType` 포함
+  - [x] 응답에 `draftHtml`·`finalHtml`·`originalKey`·`previewKey` 키 0건
+  - [x] 다른 사용자 프로젝트 조회 → 404 `NOT_FOUND`
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-05b 폼 저장·목록
 - 우선순위: M · 단계: P2 · 추정: 0.5h · 구간: P2 1일 차 (BE-05 1h 중 0.5h)
@@ -473,11 +479,11 @@ flowchart LR
   - `PUT /api/projects/:id/form`(자격 `assertEligible`, body `{form, version}`): version 확인 후 성공 시 version+1(FR-34), DRAFT·ANALYZED에서만 허용하고 그 외 409. 필수값 검증(BR-35)은 하지 않는다(생성 요청 BE-09a에서).
   - `GET /api/projects`(내 것만, `toProject`).
 - 완료 조건:
-  - [ ] 잔액 0 사용자: 생성·폼 저장 402, 목록·상세 200
-  - [ ] 폼 저장: DRAFT에서 200 후 상세 조회에 저장한 `form` 반영, 필수값이 비어 있어도 저장됨(BR-35는 생성 요청 시점)
-  - [ ] 폼 저장: GENERATED 프로젝트 409, version 불일치 409, 다른 사용자 프로젝트 404
-  - [ ] 폼 저장 성공 응답의 version이 요청 version+1
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] 잔액 0 사용자: 생성·폼 저장 402, 목록·상세 200
+  - [x] 폼 저장: DRAFT에서 200 후 상세 조회에 저장한 `form` 반영, 필수값이 비어 있어도 저장됨(BR-35는 생성 요청 시점)
+  - [x] 폼 저장: GENERATED 프로젝트 409, version 불일치 409, 다른 사용자 프로젝트 404
+  - [x] 폼 저장 성공 응답의 version이 요청 version+1
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-06 스토리지·이미지 업로드·프리뷰 사본
 - 우선순위: M · 단계: P2 · 추정: 2h · 구간: P2 1일 차
@@ -488,25 +494,25 @@ flowchart LR
   - `POST /api/projects/:id/assets`(자격 `assertEligible`): `multer` 메모리, 요청당 1장, 10MB, jpg/png/webp, `sharp`로 실제 이미지 확인, 프로젝트당 10장(DB 개수), PUBLISHED면 409.
   - 원본 → 비공개 `original_key`, `sharp`로 폭 390px 이하 + 워터마크 합성 → `preview_key`. 응답은 asset id만.
 - 완료 조건:
-  - [ ] AC-BR36: 11번째 이미지·10MB 초과·gif·확장자만 png인 텍스트 파일 → 각각 400
-  - [ ] 저장된 프리뷰 사본 폭 ≤ 390px(`sharp` metadata)
-  - [ ] 업로드 응답에 원본·프리뷰 키와 버킷 호스트 0건
-  - [ ] 업로드 후 `public_key IS NULL`, 공개 버킷 객체 0건
-  - [ ] 테스트 실행 중 외부 스토리지 호출 0건
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] AC-BR36: 11번째 이미지·10MB 초과·gif·확장자만 png인 텍스트 파일 → 각각 400
+  - [x] 저장된 프리뷰 사본 폭 ≤ 390px(`sharp` metadata)
+  - [x] 업로드 응답에 원본·프리뷰 키와 버킷 호스트 0건
+  - [x] 업로드 후 `public_key IS NULL`, 공개 버킷 객체 0건
+  - [x] 테스트 실행 중 외부 스토리지 호출 0건
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-07a HTML 모듈: 정제·워터마크
 - 우선순위: M · 단계: P1 · 추정: 1h · 구간: 1일 차 오후 (BE-07 2h 중 1h)
 - 선행: BE-01a, DEC-03(결정됨)
 - 관련: FR-14, FR-16, NFR-10, OP-07, LY-18, DEC-06, BR-30, BR-51, BR-54, AC-BR30
 - 수행 작업:
-  - `lib/html.js`(`cheerio`) 정제: 태그 화이트리스트, 속성은 `style`·`src`·`alt`·`data-block-id`·`data-edit-id`만, `script`·`link`·`style`·`class`·`on*`·`javascript:` 제거, 루트 폭 780px, 누락된 최상위 섹션 `data-block-id` 부여. 허용 규격은 DEC-06 확정 규격(인라인 CSS 전용, 만료 없는 공개 이미지 URL). PRD-V-7 실측에서 막히면 D-16/D-12를 재결정하고 이 Task를 수정한다.
+  - `lib/html.js`(`cheerio`) 정제: 태그 화이트리스트, 속성은 `style`·`src`(`asset:{uuid}`만)·`alt`·`data-block-id`·`data-edit-id`만, `script`·`link`·`style`·`class`·`on*`·`javascript:` 제거, 루트 폭 780px, 누락된 최상위 섹션 `data-block-id` 부여. 허용 규격은 DEC-06 확정 규격(인라인 CSS 전용, 만료 없는 공개 이미지 URL). PRD-V-7 실측에서 막히면 D-16/D-12를 재결정하고 이 Task를 수정한다.
   - 워터마크 삽입(최상단 사선 오버레이 + 블록별 반복, 인라인 style).
 - 완료 조건:
-  - [ ] [P0] 악성 샘플 정제 결과에 `script`·`link`·`style`·`class`·`on*`·`javascript:` 0개, 모든 최상위 섹션에 `data-block-id`(중복 없음)
-  - [ ] 정제를 두 번 적용한 결과가 한 번 적용한 결과와 같음
-  - [ ] 워터마크 결과에 오버레이 1개 + 블록 수만큼 워터마크
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] 악성 샘플 정제 결과에 `script`·`link`·`style`·`class`·`on*`·`javascript:` 0개, 모든 최상위 섹션에 `data-block-id`(중복 없음)
+  - [x] 정제를 두 번 적용한 결과가 한 번 적용한 결과와 같음
+  - [x] 워터마크 결과에 오버레이 1개 + 블록 수만큼 워터마크
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-07b HTML 모듈: 편집 ID·이미지 교체
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 1일 차 (BE-07 2h 중 1h)
@@ -514,12 +520,12 @@ flowchart LR
 - 관련: FR-14, FR-16, FR-17, FR-22, DEC-08, BR-35
 - 수행 작업:
   - 정제에 편집 대상 텍스트 요소의 블록 내 고유 `data-edit-id` 부여를 추가한다(DEC-08).
-  - draftHtml 이미지 참조 형식 1개를 정한다(3장 미정 사항).
+  - draftHtml 이미지 참조 형식 1개를 정한다(3장 미정 사항). 정함: `asset:{uuid}`.
   - 이미지 참조 교체(프리뷰 사본 / 공개 URL).
 - 완료 조건:
-  - [ ] 편집 대상 텍스트 요소마다 `data-edit-id`가 있고 블록 안에서 중복 없음
-  - [ ] 정제를 두 번 적용한 결과가 한 번 적용한 결과와 같음(`data-edit-id` 값도 유지)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] 편집 대상 텍스트 요소마다 `data-edit-id`가 있고 블록 안에서 중복 없음
+  - [x] 정제를 두 번 적용한 결과가 한 번 적용한 결과와 같음(`data-edit-id` 값도 유지)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-08a LLM 어댑터: Role·mock·타임아웃
 - 우선순위: M · 단계: P1 · 추정: 1h · 구간: 1일 차 오후 (BE-08 2.5h 중 1h)
@@ -530,9 +536,9 @@ flowchart LR
   - 타임아웃 90초(`AbortSignal.timeout`), 호출 실패·타임아웃은 502 `UPSTREAM_FAILED`(DEC-09).
   - `.env.example`에 현행 모델 ID 예시(PRD-R-9).
 - 완료 조건:
-  - [ ] `LLM_MAIN` 값만 바꿔 google ↔ anthropic 전환, 서비스 코드 수정 0줄(FR-27)
-  - [ ] `services/`에 provider·모델명 문자열 0건(grep, PP-08)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] `LLM_MAIN` 값만 바꿔 google ↔ anthropic 전환, 서비스 코드 수정 0줄(FR-27)
+  - [x] `services/`에 provider·모델명 문자열 0건(grep, PP-08)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-08b LLM 어댑터: 상한·세마포어·사용량 로그
 - 우선순위: M · 단계: P2 · 추정: 1.5h · 구간: P2 1일 차 (BE-08 2.5h 중 1.5h)
@@ -543,11 +549,11 @@ flowchart LR
   - 프로세스별 세마포어(MAIN 20, LIGHT 40), 대기열 100건·30초 → 503 `LLM_BUSY` + `Retry-After`. `// ponytail:` 한계 주석.
   - 모든 호출 `llm_usage_logs` 1행. 로그에 대기열 길이·실패 코드(입출력 제외).
 - 완료 조건:
-  - [ ] [P1] 21번째 MAIN 요청 → 429 `DAILY_LLM_LIMIT`, mock 호출 0회(AC-BR75)
-  - [ ] [P1] 성공·실패를 섞어 N회 호출 → `llm_usage_logs` N행(FR-28)
-  - [ ] [P1] 전날(Asia/Seoul) 23:59 로그는 집계에서 제외, 당일 0:00 이후 로그만 상한에 포함(DEC-10)
-  - [ ] [P1] MAIN 동시 요청이 20 + 대기열 100을 넘으면 초과분 503 + `Retry-After`(NFR-03, AC-BR76)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P1] 21번째 MAIN 요청 → 429 `DAILY_LLM_LIMIT`, mock 호출 0회(AC-BR75)
+  - [x] [P1] 성공·실패를 섞어 N회 호출 → `llm_usage_logs` N행(FR-28)
+  - [x] [P1] 전날(Asia/Seoul) 23:59 로그는 집계에서 제외, 당일 0:00 이후 로그만 상한에 포함(DEC-10)
+  - [x] [P1] MAIN 동시 요청이 20 + 대기열 100을 넘으면 초과분 503 + `Retry-After`(NFR-03, AC-BR76)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-09a 생성(분석 생략, 텍스트 중심)
 - 우선순위: M · 단계: P1 · 추정: 1h · 구간: 1일 차 오후 (BE-09 2h 중 1h)
@@ -556,11 +562,11 @@ flowchart LR
 - 수행 작업:
   - `POST /api/projects/:id/generate`(P1은 requireAuth, `assertEligible` 호출은 BE-03b에서 추가, version): 텍스트 필수값(이미지 조건은 BE-09b), DRAFT·ANALYZED만, `selectedUsps=[]`면 분석 생략 → TX 밖 `callRole('MAIN')` → 정제 → 짧은 TX로 version 재확인 후 `draft_html` 저장·GENERATED·version+1. 동기 응답(C-7). 이미지 없이 텍스트 중심으로 생성한다.
 - 완료 조건:
-  - [ ] AC-BR25: `selectedUsps=[]`로 DRAFT → GENERATED
-  - [ ] 텍스트 필수값 누락 → 400, LLM 호출 0회(AC-BR35)
-  - [ ] 저장된 `draft_html`에 `script`·`link`·`style`·`class` 0개, 모든 섹션 `data-block-id`(FR-14)
-  - [ ] `withTx` 안 `callRole` 호출 0건(코드 확인, LY-03)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] AC-BR25: `selectedUsps=[]`로 DRAFT → GENERATED
+  - [x] 텍스트 필수값 누락 → 400, LLM 호출 0회(AC-BR35)
+  - [x] 저장된 `draft_html`에 `script`·`link`·`style`·`class` 0개, 모든 섹션 `data-block-id`(FR-14)
+  - [x] `withTx` 안 `callRole` 호출 0건(코드 확인, LY-03)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-09b 진행 중 작업 선점·이미지 필수값
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 2일 차 (BE-09 2h 중 1h)
@@ -570,12 +576,12 @@ flowchart LR
   - 선점·해제 함수(생성·재생성·분석 공용): `version` 일치 + `active_job_type IS NULL` + 카운트 상한 조건부 UPDATE, 0행이면 원인별 409/429.
   - 생성(BE-09a)에 GENERATE 선점 → 저장 시 작업 해제, 실패·거절·version 변경 시 해제를 넣는다. D-18 필수값에 이미지 1장 이상을 추가하고 draftHtml에 이미지 참조(BE-07b 형식)를 넣는다.
 - 완료 조건:
-  - [ ] [P0] 동시 생성 2건 → mock LLM 호출 1회, 나머지 409(AC-BR39)
-  - [ ] 이미지 0장 → 400, LLM 호출 0회(AC-BR35)
-  - [ ] mock 실패(502 `UPSTREAM_FAILED`)·503 → `active_job_type IS NULL`, status·version 불변
-  - [ ] LLM 대기 중 version을 바꾸면 결과 폐기·작업 해제(FR-34)
-  - [ ] 실제 선점 경로로 만든 진행 중 작업이 D-30 경과 후 `releaseExpiredJobs`(DB-03)로 복원됨(통합 확인)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] 동시 생성 2건 → mock LLM 호출 1회, 나머지 409(AC-BR39)
+  - [x] 이미지 0장 → 400, LLM 호출 0회(AC-BR35)
+  - [x] mock 실패(502 `UPSTREAM_FAILED`)·503 → `active_job_type IS NULL`, status·version 불변
+  - [x] LLM 대기 중 version을 바꾸면 결과 폐기·작업 해제(FR-34)
+  - [x] 실제 선점 경로로 만든 진행 중 작업이 D-30 경과 후 `releaseExpiredJobs`(DB-03)로 복원됨(통합 확인)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-10a 서버 프리뷰 합성(워터마크)
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 1일 차 오후 (BE-10 1.5h 중 0.5h)
@@ -584,11 +590,11 @@ flowchart LR
 - 수행 작업:
   - `GET /api/projects/:id/preview`(자격 무관): `draft_html` → 워터마크 삽입 → 응답(저장 안 함). 해제 파라미터 없음. P1은 텍스트 중심이라 이미지 교체가 없다(BE-10b).
 - 완료 조건:
-  - [ ] AC-BR51: 어떤 쿼리 파라미터를 줘도 워터마크 포함
-  - [ ] AC-BR54: 오버레이 1개 + 블록별 워터마크
-  - [ ] 프리뷰 응답에 공개·비공개 버킷 호스트·finalHtml 0건
-  - [ ] 폼 → 생성 → preview API 스모크 테스트 통과(M1)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] AC-BR51: 어떤 쿼리 파라미터를 줘도 워터마크 포함
+  - [x] AC-BR54: 오버레이 1개 + 블록별 워터마크
+  - [x] 프리뷰 응답에 공개·비공개 버킷 호스트·finalHtml 0건
+  - [x] 폼 → 생성 → preview API 스모크 테스트 통과(M1)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-10b 프리뷰 이미지 data URI·편집 blocks
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 2일 차 (BE-10 1.5h 중 1h)
@@ -598,11 +604,11 @@ flowchart LR
   - 프리뷰에서 이미지 참조를 비공개 버킷의 프리뷰 사본(`preview_key`)을 읽어 `data:image/webp;base64,...`로 인라인 교체(DEC-01)한 뒤 워터마크를 넣는다. 서명 URL은 쓰지 않는다.
   - 응답에 편집용 `blocks: [{blockId, fields: [{editId, text}]}]`를 함께 담는다(`lib/html.js`가 `data-block-id`·`data-edit-id`에서 추출, DEC-08).
 - 완료 조건:
-  - [ ] AC-BR50: 프리뷰의 모든 이미지가 data URI 프리뷰 사본(폭 ≤ 390px), 원본 키 0건, `http(s)` 이미지 URL 0건
-  - [ ] `blocks`가 프리뷰 HTML의 `data-block-id`·`data-edit-id`와 일치하고 각 `text`가 현재 텍스트
-  - [ ] 이미지 10장 프로젝트의 프리뷰 응답 크기를 측정해 기록
-  - [ ] 폼 → 업로드 → 생성 → preview API 스모크 테스트 통과
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] AC-BR50: 프리뷰의 모든 이미지가 data URI 프리뷰 사본(폭 ≤ 390px), 원본 키 0건, `http(s)` 이미지 URL 0건
+  - [x] `blocks`가 프리뷰 HTML의 `data-block-id`·`data-edit-id`와 일치하고 각 `text`가 현재 텍스트
+  - [x] 이미지 10장 프로젝트의 프리뷰 응답 크기를 측정해 기록 — **측정: 약 488KB(499,587 bytes)**, 1200×1600 합성 노이즈 JPEG 10장(장당 약 875KB) 기준. 실사진은 압축률이 달라 값이 다를 수 있음(2026-10-01)
+  - [x] 폼 → 업로드 → 생성 → preview API 스모크 테스트 통과
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-11 재생성
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 2일 차
@@ -611,12 +617,12 @@ flowchart LR
 - 수행 작업:
   - `POST /api/projects/:id/regenerate`(자격 `assertEligible`, version): GENERATED·EDITING만, `regen_count < 3` + REGEN 선점 → MAIN → 반영 시 draft 교체(수동 편집 초기화, BR-34), GENERATED, version+1. 실패·429·503·version 변경 시 `regen_count - 1`·해제. 차감 없음.
 - 완료 조건:
-  - [ ] [P0] AC-BR34: 4번째 재생성 → 429 `REGEN_LIMIT`, mock 호출 0회
-  - [ ] [P0] mock 실패 → `regen_count` 원복, `active_job_type IS NULL`(BR-47)
-  - [ ] 503 `LLM_BUSY` → `regen_count` 원복(AC-BR76)
-  - [ ] [P0] 동시 재생성 2건 → LLM 1회, 1건 409(AC-BR39)
-  - [ ] 재생성 후 DEDUCT 0건, 잔액 불변(BR-11)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] AC-BR34: 4번째 재생성 → 429 `REGEN_LIMIT`, mock 호출 0회
+  - [x] [P0] mock 실패 → `regen_count` 원복, `active_job_type IS NULL`(BR-47)
+  - [x] 503 `LLM_BUSY` → `regen_count` 원복(AC-BR76)
+  - [x] [P0] 동시 재생성 2건 → LLM 1회, 1건 409(AC-BR39)
+  - [x] 재생성 후 DEDUCT 0건, 잔액 불변(BR-11)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-12 수동 편집·version 잠금·읽기 전용
 - 우선순위: M · 단계: P2 · 추정: 1.5h · 구간: P2 3일 차
@@ -627,13 +633,13 @@ flowchart LR
   - `POST /api/projects/:id/edits`(자격 `assertEligible`, 프로젝트 조회 직후 소유 → PUBLISHED 409 → 자격 순): body `{blockId, editId, text, version}`만 허용, text에 태그 → 400, 블록에 없는 `editId` → 400.
   - 짧은 TX: PUBLISHED → 409 `INVALID_STATE`, 진행 중 작업 → 409, version 불일치 → 409. 적용 → `draft_html`, GENERATED → EDITING, version+1, `edit_operations`(MANUAL, payload `{editId, text}`) 1행. 응답은 새 version + 새 프리뷰(`blocks` 포함).
 - 완료 조건:
-  - [ ] [P0] AC-BR48: 같은 version 편집 2건 동시 → 1건 200, 1건 409 `VERSION_CONFLICT`
-  - [ ] [P1] AC-BR44: text에 `<b>` 포함 → 400, `draft_html` 불변
-  - [ ] [P1] AC-BR46: PUBLISHED 프로젝트 편집 → 409(잔액 0이어도 409)
-  - [ ] AC-BR40: 지정 blockId·editId 요소의 텍스트만 변경, 다른 블록·다른 요소 동일
-  - [ ] 응답 `blocks`에 변경된 `text` 반영, 없는 `editId` → 400
-  - [ ] 생성 진행 중 편집 → 409 `JOB_IN_PROGRESS`
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] AC-BR48: 같은 version 편집 2건 동시 → 1건 200, 1건 409 `VERSION_CONFLICT`
+  - [x] [P1] AC-BR44: text에 `<b>` 포함 → 400, `draft_html` 불변
+  - [x] [P1] AC-BR46: PUBLISHED 프로젝트 편집 → 409(잔액 0이어도 409)
+  - [x] AC-BR40: 지정 blockId·editId 요소의 텍스트만 변경, 다른 블록·다른 요소 동일
+  - [x] 응답 `blocks`에 변경된 `text` 반영, 없는 `editId` → 400
+  - [x] 생성 진행 중 편집 → 409 `JOB_IN_PROGRESS`
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-13 경쟁사 분석·USP 저장
 - 우선순위: M · 단계: P2 · 추정: 2.5h · 구간: P2 3일 차
@@ -644,13 +650,13 @@ flowchart LR
   - `POST /api/projects/:id/analyze`(자격 `assertEligible`, version): D-15 URL 검증(쿼리 제거, 실패 400·미소모), DRAFT·ANALYZED만, `analyze_count < 3` + ANALYZE 선점 → 크롤링 → LIGHT → `analysis_results` 덮어쓰기. 실행된 시도는 실패해도 카운트 유지, LLM 미호출 429·503은 복원. ANALYZED에서 재분석 → 선택 비우고 DRAFT.
   - `PUT /api/projects/:id/usps`(자격 `assertEligible`, version): 후보 안 값만, 1개 이상 → ANALYZED, version+1.
 - 완료 조건:
-  - [ ] [P0] AC-BR26: 실패 포함 3회 뒤 4번째 → 429 `ANALYZE_LIMIT`, 크롤링·LLM 0회
-  - [ ] URL 형식 오류 → 400, `analyze_count` 불변
-  - [ ] 503·일일 상한 429 → `analyze_count` 복원(BR-47)
-  - [ ] GENERATED에서 analyze·usps → 409(BR-27)
-  - [ ] AC-BR24: USP 저장 후 ANALYZED, `selected_usps` = 선택값
-  - [ ] [P2] AC-BR22: 알려진 리뷰 문장이 DB 전 테이블·로그에 0건
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] AC-BR26: 실패 포함 3회 뒤 4번째 → 429 `ANALYZE_LIMIT`, 크롤링·LLM 0회
+  - [x] URL 형식 오류 → 400, `analyze_count` 불변
+  - [x] 503·일일 상한 429 → `analyze_count` 복원(BR-47)
+  - [x] GENERATED에서 analyze·usps → 409(BR-27)
+  - [x] AC-BR24: USP 저장 후 ANALYZED, `selected_usps` = 선택값
+  - [x] [P2] AC-BR22: 알려진 리뷰 문장이 DB 전 테이블·로그에 0건
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-14a 퍼블리시 TX·최종 HTML
 - 우선순위: M · 단계: P1 · 추정: 2.5h · 구간: 2일 차 오전 (BE-14 3.5h 중 2.5h)
@@ -660,15 +666,15 @@ flowchart LR
   - `POST /api/projects/:id/publish`(version, 자격은 TX 안에서 검사): PRD 7.3 순서대로 `withTx` — `FOR UPDATE` → PUBLISHED면 기존 결과 → 이메일 인증 403·잔액 선검사(`topup_balance + subscription_balance < 1`이면 402) → version·진행 중 작업 409 → DEDUCT `ON CONFLICT DO NOTHING` → 잔액 −1(CHECK 위반 402, 최후 방어선) → `final_html`(워터마크 없음, `data-edit-id`·`data-block-id` 제거. 규격은 DEC-06 확정, PRD-V-7 실측에서 막히면 재결정)·PUBLISHED·version+1·`published_at` → `publish_records`(SHA-256 해시). P1은 텍스트 중심이라 이미지 공개 URL 교체가 없다(BE-14b).
   - `GET /api/projects/:id/final`: PUBLISHED 아니면 403 `NOT_PUBLISHED`, 자격 무관, 재조회 무제한.
 - 완료 조건:
-  - [ ] [P0] PRD-V-3, AC-BR13: 동시 퍼블리시 2건 → DEDUCT 1건, 잔액 −1, 두 응답 finalHtml 해시 동일
-  - [ ] [P0] AC-BR14: 잔액 0 → 402, DEDUCT 0건, 상태 불변
-  - [ ] 잔액 0 + version 불일치 요청 → 402(409 아님)
-  - [ ] [P0] AC-BR12: `publish_records` 선삽입으로 TX 중 실패 유발 → 롤백, 잔액·상태 불변, DEDUCT 0건
-  - [ ] [P0] BR-13: PUBLISHED 재요청(틀린 version, 잔액 0) → 200 기존 결과, 추가 DEDUCT 0건
-  - [ ] AC-BR52: 미퍼블리시 `GET /final` → 403. AC-BR10: 잔액 0에서 `GET /final` 200
-  - [ ] `final_html`에 워터마크·비공개 키 0건, `withTx` 안 스토리지 호출 0건
-  - [ ] 최종 HTML에 data-edit-id·data-block-id 0건 (`draft_html`에는 유지)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] PRD-V-3, AC-BR13: 동시 퍼블리시 2건 → DEDUCT 1건, 잔액 −1, 두 응답 finalHtml 해시 동일
+  - [x] [P0] AC-BR14: 잔액 0 → 402, DEDUCT 0건, 상태 불변
+  - [x] 잔액 0 + version 불일치 요청 → 402(409 아님)
+  - [x] [P0] AC-BR12: `publish_records` 선삽입으로 TX 중 실패 유발 → 롤백, 잔액·상태 불변, DEDUCT 0건
+  - [x] [P0] BR-13: PUBLISHED 재요청(틀린 version, 잔액 0) → 200 기존 결과, 추가 DEDUCT 0건
+  - [x] AC-BR52: 미퍼블리시 `GET /final` → 403. AC-BR10: 잔액 0에서 `GET /final` 200
+  - [x] `final_html`에 워터마크·비공개 키 0건, `withTx` 안 스토리지 호출 0건
+  - [x] 최종 HTML에 data-edit-id·data-block-id 0건 (`draft_html`에는 유지)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-14b 공개 이미지 사본
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 2일 차 (BE-14 3.5h 중 1h)
@@ -676,12 +682,12 @@ flowchart LR
 - 관련: FR-22, FR-35, BR-39, BR-66, D-12, I-16, AC-BR66
 - 수행 작업:
   - `final_html` 이미지를 `PUBLIC_IMAGE_BASE_URL`(R2 공개 도메인) + UUID 경로로 만든다.
-  - COMMIT 뒤 원본 → 공개 버킷 UUID 키 복사, `assets.public_key` 기록. 실패 시 재시도, 크레딧 유지.
+  - COMMIT 뒤 원본 → 공개 버킷 `{assetId}.{ext}` 키 복사(최대 3회 시도), `assets.public_key` 기록. 실패는 로그만, 크레딧 유지. 재시도는 퍼블리시 재요청과 `GET /final`(I-16).
 - 완료 조건:
-  - [ ] 재생성 진행 중 퍼블리시 → 409, 차감 0건(FR-35)
-  - [ ] AC-BR66: 퍼블리시 전 공개 버킷 객체 0건, 커밋 후 `final_html` 이미지가 서명 파라미터 없는 공개 URL
-  - [ ] 복사 실패를 주입해도 크레딧 유지, 재시도 후 `public_key` 채워짐
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] 재생성 진행 중 퍼블리시 → 409, 차감 0건(FR-35)
+  - [x] AC-BR66: 퍼블리시 전 공개 버킷 객체 0건, 커밋 후 `final_html` 이미지가 서명 파라미터 없는 공개 URL
+  - [x] 복사 실패를 주입해도 크레딧 유지, 재시도 후 `public_key` 채워짐
+  - [x] 구조 원칙 5.3 DoD 충족
 
 #### BE-15 콘텐츠 유출·자격 통합 테스트
 - 우선순위: M · 단계: P2 · 추정: 1h · 구간: P2 4일 차
@@ -690,10 +696,10 @@ flowchart LR
 - 수행 작업:
   - `node:test` E2E 1개: 가입 → 지급 → 프로젝트 → 업로드 → 분석(대체 크롤러) → USP → 생성 → 프리뷰 → 편집 → 재생성 → 퍼블리시 → final. 퍼블리시 전 모든 응답 본문을 모아 검사.
 - 완료 조건:
-  - [ ] [P0] PRD-V-4: 퍼블리시 전 모든 응답 본문에 원본 키 접두어·공개·비공개 버킷 호스트·finalHtml 0건(프리뷰 이미지는 data URI만, AC-BR32, AC-BR53)
-  - [ ] 퍼블리시 후 잔액 0: `/api/me`·목록·final 200, 편집 409, 퍼블리시 재요청 200(FR-06 수용 기준)
-  - [ ] `node --test` 전체 통과(P0 전부)
-  - [ ] 구조 원칙 5.3 DoD 충족
+  - [x] [P0] PRD-V-4: 퍼블리시 전 모든 응답 본문에 원본 키 접두어·공개·비공개 버킷 호스트·finalHtml 0건(프리뷰 이미지는 data URI만, AC-BR32, AC-BR53)
+  - [x] 퍼블리시 후 잔액 0: `/api/me`·목록·final 200, 편집 409, 퍼블리시 재요청 200(FR-06 수용 기준)
+  - [x] `node --test` 전체 통과(P0 전부)
+  - [x] 구조 원칙 5.3 DoD 충족
 
 ### 6.3 FE
 
@@ -1049,6 +1055,9 @@ M 추정 합계 49.5h는 2일(16h)을 넘는다. 2026-09-30 Claude 위임 결정
 | C-3 | 해소(DEC-02, 단일 도메인·동일 출처). 남는 위험은 Cloudflare 프록시 경유 시 쿠키·긴 요청 동작 | OPS-01에서 로그인 유지와 85초 요청으로 확인 | OPS-01 |
 | PRD-R-3 | LLM Provider 레이트 리밋이 부하를 못 버팀 | BE-08b 세마포어·상한, 유료 티어 한도 사전 확인 | BE-08b, OPS-02 |
 | PRD-R-5 | 서버 IP 크롤링 차단 | 분석 생략 경로 안내(FE-07), 분석은 축소 1순위 | BE-13, FE-07 |
+| PRD-R-12 | refresh 30일 상한을 가장 오래된 행의 `created_at`으로 판정해, 정리 job이 그 행을 지우면 상한이 늘어날 수 있음(`ponytail:` 주석) | MVP는 수용 | BE-04 |
+| PRD-R-13 | 일일 LLM 상한 확인이 비원자라 동시 요청이면 소폭 초과(`ponytail:` 주석) | MVP는 수용 | BE-08b |
+| PRD-R-14 | 업로드 실패·경쟁 시 이미 올린 객체가 고아로 남음(`ponytail:` 주석) | MVP는 수용 | BE-06 |
 | - | `docs/schema.sql`과 `001_init.sql` 두 벌이 어긋남 | 이관 뒤 스키마 변경은 새 마이그레이션 파일로만(OP-10) | DB-01 |
 | - | 1인 작업이라 DEC 결정 대기가 곧 일정 지연 | DEC-01~10 결정 완료로 해소. PRD-V-7 실측 결과로 재결정이 생기면 해당 Task를 수정 | DEC-06 |
 
