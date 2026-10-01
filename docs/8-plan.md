@@ -1,14 +1,14 @@
-# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.17 초안)
+# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.20 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 작업 실행 계획(WBS) |
-| 버전 | v0.1.17 (초안) |
+| 버전 | v0.1.20 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 문서 버전 | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10, ERD v0.1.10, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
+| 기준 문서 버전 | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
 | 범위 | MVP(M) Task 분해·의존·일정. M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다. S/C는 8장에 요약 |
 
 ### 문서 변경 이력
@@ -18,6 +18,9 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.20 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리(체크박스 변경 없음, `[x]` 136개 유지): 3장 DEC-10, BE-08b(429 초기화 시각 문구) |
+| v0.1.19 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.12, PRD v0.3.11, 시나리오 v0.1.10, 와이어프레임 v0.1.10, 구조 원칙 v0.1.12, 아키텍처 v0.1.12, ERD v0.1.12 | 백엔드 구현 기준 최신화(체크박스 변경 없음, `[x]` 136개 유지): DB-03(주기 작업 시작 시 즉시 1회 실행·간격 기준) |
+| v0.1.18 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.11, PRD v0.3.10, 시나리오 v0.1.9, 와이어프레임 v0.1.9, 구조 원칙 v0.1.11, 아키텍처 v0.1.11, ERD v0.1.11 | 개발용 CORS·Swagger UI 반영(체크박스 변경 없음): 3장 DEC-02 결정 서술, BE-01a(수행 작업·CORS 완료 조건 문구, 새 Task 없음), OPS-01 확인 항목의 CORS 문구 |
 | v0.1.17 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10, ERD v0.1.10 | 백엔드 구현 [가정] 반영(체크박스 변경 없음): 3장 미정 사항 표(E-13, I-10·I-12·N-10, I-16, 이미지 참조 형식), BE-01a(의존성 문구), BE-02b(리밋 순서), BE-03b(`assertEligible(userId, db)`), BE-07a(`src`), BE-07b(`asset:{uuid}`), BE-14b(공개 키·재시도 시점), 9.1 PRD-R-12·13·14 |
 | v0.1.16 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | 배치 B4(BE-12·13·15) 완료 조건 체크. `npm test` 168/168(2회 연속), 라인 커버리지 97.66%. 크롤러는 로컬 HTTP 서버·mock으로 검증(실제 쿠팡 크롤링은 OPS-02). BE-01b~BE-15 M Task 전부 완료 |
 | v0.1.15 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9, ERD v0.1.9 | 배치 B3(BE-06·09b·10b·11·14b) 완료 조건 체크. `npm test` 148/148, 라인 커버리지 98.14%. 스토리지는 로컬 드라이버로 검증(실제 R2는 OPS-01). BE-10b 프리뷰 응답 크기 측정값 기록 |
@@ -72,7 +75,7 @@
 | ID | 결정 항목 | 출처 | 문서의 제안·선택지 → 결정 | 기한 | 막던 Task | 상태 |
 |---|---|---|---|---|---|---|
 | DEC-01 | 프리뷰 이미지 전달 방식 | C-1, D-21, E-8, FR-16 | data URI 인라인 / 단기 서명 URL. **결정: data URI 인라인.** 서버가 비공개 버킷의 390px 워터마크 사본(`preview_key`)을 읽어 `data:image/webp;base64,...`로 프리뷰 HTML에 넣는다. 서명 URL은 쓰지 않는다 | 1일 차 오후 전 | BE-10b | 결정됨 |
-| DEC-02 | 프론트·API 도메인 배치(SameSite=Strict 쿠키 전송) | C-3, PRD-D-2, D-31 | 커스텀 도메인 서브도메인 2개 / 같은 출처 프록시. **결정: 단일 도메인·동일 출처.** Express가 `frontend/dist`를 서빙하고 `/api/*`를 처리, 앞단 Cloudflare 프록시(무료 CDN 캐시). CORS 미사용(Origin 검사 유지), 별도 정적 호스팅 미사용 | P2 5일 차 전 | OPS-01 | 결정됨 |
+| DEC-02 | 프론트·API 도메인 배치(SameSite=Strict 쿠키 전송) | C-3, PRD-D-2, D-31 | 커스텀 도메인 서브도메인 2개 / 같은 출처 프록시. **결정: 단일 도메인·동일 출처.** Express가 `frontend/dist`를 서빙하고 `/api/*`를 처리, 앞단 Cloudflare 프록시(무료 CDN 캐시). 운영은 동일 출처, CORS는 `FRONTEND_ORIGIN` 하나만 허용(Origin 검사 유지), 별도 정적 호스팅 미사용 | P2 5일 차 전 | OPS-01 | 결정됨 |
 | DEC-03 | 신규 라이브러리 승인 | C-4, LY-17, 구조 원칙 3.5 | `multer`, `@aws-sdk/client-s3`, `cheerio`, `express-rate-limit`, `react-router`, `prettier`. **결정: 6개 모두 승인**(`prettier`는 개발용) | 1일 차 착수 전 | BE-02a, BE-06, BE-07a, FE-01a | 결정됨 |
 | DEC-04 | 카운트 상한 CHECK 유지 여부 | E-1, PRD 7.4, PP-09 | CHECK에 상한 박제 / 하한만 CHECK, 상한은 조건부 UPDATE. **결정: DB CHECK는 하한(`>= 0`)만.** 상한(3, 6)은 config(PP-09)의 값으로 조건부 원자 UPDATE(`< $max`)가 강제. `docs/schema.sql` 반영 완료 | 1일 차 착수 전 | DB-01 | 결정됨 |
 | DEC-05 | 폼(제품명 등) 저장 API·시점 | C-9, E-5, I-8 | `POST /api/projects` body / 생성 요청 body / 별도 저장 API. **결정: 별도 저장 API `PUT /api/projects/:id/form`**(body `{form, version}`, 자격 FR-06, version 확인, DRAFT·ANALYZED만 허용·그 외 409). `POST /api/projects`는 form을 선택적으로 받고, 필수값 검증(BR-35)은 생성 요청 시점 | 1일 차 오후 전 | BE-05a, BE-05b, FE-04a, FE-04b | 결정됨 |
@@ -80,7 +83,7 @@
 | DEC-07 | 오브젝트 스토리지 선택 | PRD-D-3, D-31 | S3 호환(R2 등), 비공개·공개 버킷 분리. **결정: Cloudflare R2**(`@aws-sdk/client-s3`). 버킷 2개: 비공개(원본·프리뷰 사본), 공개(퍼블리시 이미지, R2 공개 도메인) | 1일 차 오후 전 | BE-06 | 결정됨 |
 | DEC-08 | 블록 선택·편집 방식(`path` 의미, 블록 목록·현재 텍스트 출처) | N-6, FR-17 | 문서 제안 없음(WF-06은 패널 목록 방식으로 그림). **결정: 서버가 편집 대상 텍스트 요소에 블록 내 고유 `data-edit-id`를 부여**(생성 결과 정제 시). 프리뷰 응답에 `blocks: [{blockId, fields: [{editId, text}]}]`를 함께 반환, 에디터는 우측 패널 목록에서 선택(iframe 안 클릭 없음). 편집 요청 `{blockId, editId, text, version}`(FR-17의 `path`를 `editId`로 대체), 서버는 해당 요소의 텍스트 노드만 교체 | P2 2일 차 전 | BE-10b, BE-12, FE-06 | 결정됨 |
 | DEC-09 | 오류 코드 채택과 403·402 우선순위 | C-2, I-2, I-4, I-7 | 구조 원칙 4.2절 제안 코드 채택 여부, 동시 해당 시 403/402 순서. **결정: 4.2절 코드 전부 채택**(502 `UPSTREAM_FAILED` 포함, 새 코드 없음). 판정 순서 401 → 409(PUBLISHED 대상) → 403 → 402 → 409(version·진행 중 작업) → 429 → 503. 프론트는 `TOKEN_INVALID`를 갱신 시도 없이 인증 상태 비우고 로그인 화면으로 | 1일 차 오전(BE-03a 전) | BE-03a, BE-08a, BE-13 | 결정됨 |
-| DEC-10 | 계정 일일 LLM 상한 기준 시각 | E-14, I-20, FR-29 | 자정 기준(Asia/Seoul) / 24시간 롤링. **결정: Asia/Seoul 자정 기준.** 집계 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`, 429 응답에서 초기화 시각 안내 가능 | 1일 차 오후 전 | BE-08b | 결정됨 |
+| DEC-10 | 계정 일일 LLM 상한 기준 시각 | E-14, I-20, FR-29 | 자정 기준(Asia/Seoul) / 24시간 롤링. **결정: Asia/Seoul 자정 기준.** 집계 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`, 429 응답에 초기화 시각 필드는 없고 프론트엔드가 고정 문구("내일 0시(한국 시간)에 초기화")로 안내 | 1일 차 오후 전 | BE-08b | 결정됨 |
 
 **블로커가 아닌 미정 사항** (문서 현재안으로 구현하고, 확정되면 해당 Task를 수정한다)
 
@@ -344,7 +347,7 @@ flowchart LR
 - 수행 작업:
   - `jobs/index.js` 1분 주기: `active_job_started_at < now() - 5분`(D-30) 행을 `active_job_type`별로 복원(ERD 6장 표: ANALYZE는 카운트 유지, GENERATE는 표시만 해제, REGEN은 `regen_count - 1`)하고 작업 표시 해제. 조건부 UPDATE로 멱등.
   - 1일 주기: 만료 `refresh_tokens` 삭제, 원장 대사(잔액 ≠ 원장 합계 건수) 불일치 시 `level=error` 로그.
-  - `server.js`에서 시작, SIGTERM에서 해제(BE-01a로 이월, `startJobs`/`stopJobs`만 제공).
+  - `server.js`에서 시작, SIGTERM에서 해제(BE-01a로 이월, `startJobs`/`stopJobs`만 제공). `startJobs()`는 세 작업을 시작 시 1회 즉시 실행한 뒤 `JOB_RESERVATION_INTERVAL_MS`(기본 1분)·`JOB_DAILY_INTERVAL_MS`(기본 1일) 간격으로 반복한다(고정 시각 아님).
 - 완료 조건:
   - [x] [P1] AC-BR47: `active_job_started_at`을 5분 전으로 둔 REGEN 행 → job 1회 → `regen_count - 1`, `active_job_type IS NULL`
   - [x] ANALYZE 행은 `analyze_count` 유지, 표시만 해제(BR-26)
@@ -364,7 +367,7 @@ flowchart LR
   - 의존성은 `express`만 추가한다. `jsonwebtoken`, `bcrypt`, `cookie-parser` 등 나머지는 사용하는 Task에서 설치한다(실제 설치 목록: `ai`, `@ai-sdk/google`, `@ai-sdk/anthropic`, `@aws-sdk/client-s3`, `bcrypt`, `cheerio`, `cookie-parser`, `express`, `express-rate-limit`, `jsonwebtoken`, `multer`, `pg`, `sharp`. 구조 원칙 3.5와 일치). `start` 스크립트 추가(`test`는 이미 있음).
   - `config.js`(확장): 필수 변수·JWT 키 32바이트 검사 후 실패 시 즉시 종료, D 수치 상수와 D-ID 주석. LLM·스토리지 키는 백엔드 환경변수에서만 읽는다(NFR-07).
   - `db.js`(확장): Pool `max=20`, `statement_timeout` 5초, `query`, `withTx`는 DB-01~02에서 구현됨.
-  - `lib/errors.js`(AppError), 미들웨어 `error-handler`. CORS 미들웨어는 두지 않는다(단일 도메인·동일 출처, DEC-02).
+  - `lib/errors.js`(AppError), 미들웨어 `error-handler`. 미들웨어 `cors`(`FRONTEND_ORIGIN` 하나만 허용, 운영은 단일 도메인·동일 출처라 실질 영향 없음, DEC-02)를 `app.js` 맨 앞에 둔다. 개발용 Swagger UI(`/api-docs`, `NODE_ENV`가 production이 아닐 때만)를 둔다.
   - `app.js`(LY-05 순서 조립) / `server.js`(listen), `GET /healthz`.
   - `server.js`: listen 뒤 `startJobs()`, SIGTERM 시 `stopJobs()` 후 서버 종료(DB-03에서 이월).
   - `.env.example`(6.1절 M 키), `.gitignore`.
@@ -374,7 +377,7 @@ flowchart LR
   - [x] `npm test`: `app.listen(0)` 기반 `/healthz` 200, DB 중단 시 503
   - [x] `JWT_ACCESS_SECRET` 31바이트로 시작 → 즉시 종료
   - [x] 없는 경로 404 `{error:{code:"NOT_FOUND"}}`, 처리되지 않은 오류 500 `INTERNAL`(스택 미노출)
-  - [x] 어떤 Origin의 요청에도 CORS 허용 헤더(`Access-Control-Allow-*`) 없음
+  - [x] 허용되지 않은 Origin에는 CORS 허용 헤더(`Access-Control-Allow-*`) 없음, `FRONTEND_ORIGIN`은 허용(preflight 204)
   - [x] `config.js` 밖 `process.env` 0건(grep)
   - [x] 구조 원칙 5.3 DoD 충족
 
@@ -545,7 +548,7 @@ flowchart LR
 - 선행: BE-08a, DEC-10(결정됨)
 - 관련: FR-28, FR-29, NFR-02, NFR-03, BR-75, BR-76, D-28, D-29, PRD-R-3
 - 수행 작업:
-  - 계정 일일 상한(MAIN 20, LIGHT 50, 실패 포함, "1일"은 Asia/Seoul 자정 기준: `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`, DEC-10) 초과 → 429 `DAILY_LLM_LIMIT`, LLM 미호출. 응답에 초기화 시각(다음 0시)을 넣을 수 있다.
+  - 계정 일일 상한(MAIN 20, LIGHT 50, 실패 포함, "1일"은 Asia/Seoul 자정 기준: `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`, DEC-10) 초과 → 429 `DAILY_LLM_LIMIT`, LLM 미호출. 응답에 초기화 시각 필드는 넣지 않는다(오류 형식 `{error:{code,message}}` 유지, 프론트엔드가 고정 문구로 안내).
   - 프로세스별 세마포어(MAIN 20, LIGHT 40), 대기열 100건·30초 → 503 `LLM_BUSY` + `Retry-After`. `// ponytail:` 한계 주석.
   - 모든 호출 `llm_usage_logs` 1행. 로그에 대기열 길이·실패 코드(입출력 제외).
 - 완료 조건:
@@ -915,7 +918,7 @@ flowchart LR
   - 배포 순서: 마이그레이션 → 프론트 빌드 → 백엔드.
 - 완료 조건:
   - [ ] 운영 `/healthz` 200, 백엔드 프로세스 2개
-  - [ ] 운영 도메인에서 로그인 → 새로고침 → 로그인 유지(`rt` 쿠키 전송, CORS 헤더 없이 동작, C-3)
+  - [ ] 운영 도메인에서 로그인 → 새로고침 → 로그인 유지(`rt` 쿠키 전송, 운영은 동일 출처라 CORS 없이 동작, C-3)
   - [ ] `/`와 `/app/projects/{id}/edit` 직접 접근 → Express가 랜딩·SPA 폴백 200
   - [ ] 정적 파일이 Cloudflare 프록시를 거친다(응답 헤더로 확인)
   - [ ] 관리형 PG 자동 백업 설정 확인(NFR-13)

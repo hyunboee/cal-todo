@@ -1,15 +1,15 @@
-# Coupang AI Detail Maker - 사용자 시나리오 (v0.1.8 초안)
+# Coupang AI Detail Maker - 사용자 시나리오 (v0.1.11 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 사용자 시나리오 |
-| 버전 | v0.1.8 (초안) |
+| 버전 | v0.1.11 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.10 (`docs/1-domain-definition.md`) |
-| 기준 PRD 버전 | v0.3.9 (`docs/2-PRD.md`) |
+| 기준 도메인 정의서 버전 | v0.3.13 (`docs/1-domain-definition.md`) |
+| 기준 PRD 버전 | v0.3.12 (`docs/2-PRD.md`) |
 | 범위 | 주 사용자 한 유형 기준의 기능 흐름별 시나리오. 페르소나별 상세 시나리오와 접근성은 범위 외(PRD 3장, 4.3절) |
 
 **표기 규약**
@@ -25,6 +25,9 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 버전 | 기준 PRD 버전 | 변경내용 |
 |---|---|---|---|---|---|
+| v0.1.11 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.13 | v0.3.12 | 의존 예외(require-auth)·일일 상한 안내 방식 정리: 2장 공통 응답 429 행, 9장 I-20 |
+| v0.1.10 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.12 | v0.3.11 | 백엔드 구현 기준 최신화: US-06 E1(없는 이메일 지정 동작), US-09 3단계(분석 응답 형태) |
+| v0.1.9 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.11 | v0.3.10 | 개발용 CORS·Swagger UI 반영: 기준 문서 버전 갱신만(시나리오 본문 변경 없음) |
 | v0.1.8 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.10 | v0.3.9 | 백엔드 구현 [가정] 반영: US-01 E1, US-09 A3, US-14 E6, 9장 I-10, I-12, I-16(해소 표시) |
 | v0.1.7 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | v0.3.8 | DB-01~03 구현 후속 정합화: 기준 문서 버전 갱신만(시나리오 본문 변경 없음) |
 | v0.1.6 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | v0.3.7 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. US-07, US-09 |
@@ -60,7 +63,7 @@
 | 403 | 이메일 미인증(자격 검사 대상 API). 402와 동시에 해당하면 403 우선 | 인증 메일 재발송 안내(US-07) | FR-06, AC-BR04 |
 | 402 | 잔액 합계 0 | 충전 안내(US-07) | FR-06, AC-BR10 |
 | 409 | version 불일치, 진행 중 작업, 허용되지 않는 상태 | 프로젝트를 다시 조회 | FR-34, FR-35, BR-27, BR-46, PRD 7.1 |
-| 429 | 프로젝트 사용 한도 또는 계정 일일 LLM 상한 초과(1일은 Asia/Seoul 자정 기준). LLM 미호출 | 오류 코드(`ANALYZE_LIMIT`, `REGEN_LIMIT`, `AI_EDIT_LIMIT`, `DAILY_LLM_LIMIT`, `RATE_LIMITED`)로 원인 구분. 일일 상한이면 초기화 시각 안내 가능 | BR-26, 34, 41, 45, FR-29 |
+| 429 | 프로젝트 사용 한도 또는 계정 일일 LLM 상한 초과(1일은 Asia/Seoul 자정 기준). LLM 미호출 | 오류 코드(`ANALYZE_LIMIT`, `REGEN_LIMIT`, `AI_EDIT_LIMIT`, `DAILY_LLM_LIMIT`, `RATE_LIMITED`)로 원인 구분. 일일 상한이면 프론트엔드가 고정 문구("내일 0시(한국 시간)에 초기화")로 안내(DEC-10) | BR-26, 34, 41, 45, FR-29 |
 | 503 + `Retry-After` | LLM 동시성·대기열 한도 초과. LLM 미호출 | `Retry-After` 기준 재시도 | NFR-03, PRD 7.1 |
 
 ---
@@ -193,7 +196,7 @@ flowchart TD
   2. 운영자가 `node scripts/grant.js <email> <n>` 실행 → 한 TX에서 원장 `reason=PURCHASE, source=TOPUP, pg_tx_id=NULL` 기록, `topup_balance +n`, `email_verified=true`(FR-07, PRD-D-7)
   3. 사용자가 화면을 다시 조회 → `GET /api/me`에 잔액 n, 인증됨. 자격은 토큰이 아니라 DB에서 매번 확인하므로 즉시 반영(PRD 5.8)
 - **대안·예외**
-  - E1 없는 이메일 지정: 동작 미정의, 확인 필요
+  - E1 없는 이메일 지정: 구현은 `user not found` 출력, 종료 코드 1, 원장·잔액 변화 0건
 - **사후 조건**: 잔액 = 원장 합계(BR-15). 사용 자격 충족.
 - **관련**: FR-07 / BR-14, 15, 17 / AC-BR15, FR-07 수용 기준 / CreditPurchased
 
@@ -228,7 +231,7 @@ flowchart TD
 - **기본 흐름**
   1. 쿠팡 상위 상품 URL 입력 후 분석(version 포함) → D-15 패턴 검증, 쿼리 제거(BR-20)
   2. → `analyze_count` 선점(실패해도 복원 안 함), 진행 중 작업 표시, 텍스트·리뷰만 휘발성 수집, LIGHT로 USP 후보 추출, AnalysisResult 저장, 원문 폐기(FR-12, BR-21~23)
-  3. → 후보를 체크박스로 표시. 상태는 DRAFT
+  3. → 후보를 체크박스로 표시. 상태는 DRAFT. 응답은 분석 결과(`sourceUrl`, `uspCandidates`, `analyzedAt`)만이라 새 version은 프로젝트를 다시 조회해 받는다
   4. 후보 1개 이상 체크 후 저장 → `PUT /p/:id/usps`(version) → `selectedUsps` 저장, ANALYZED(BR-24)
 - **대안·예외**
   - A1 ANALYZED에서 선택 변경: ANALYZED 유지
@@ -484,5 +487,5 @@ flowchart TD
 | I-17 | 소셜 가입자 이메일 인증 | BR-04는 Credentials 가입자에만 적용되는데 FR-06은 모든 사용자에게 `email_verified=true`를 요구한다. 부분 해소(도메인 v0.3.3 BR-04, PRD v0.3.2 FR-02): OAuth 가입자는 가입 시 true. 남은 쟁점은 Provider가 이메일을 주지 않아 직접 입력한 이메일(Kakao·Naver, C)의 인증 경로다 | BR-04, FR-02, FR-06 |
 | I-18 | 확장 미설치 감지 | 확장이 없거나 데스크톱 Chrome이 아닐 때 이를 감지해 복사로 안내하는 방법이 정의되어 있지 않다 | BR-65, FR-24 |
 | I-19 | 충전 상품·도입 순서 | 충전 크레딧 수량·가격이 정의되어 있지 않다(Plan은 구독용이며 W). FR-08과 FR-04가 모두 S라서 FR-04보다 결제가 먼저 도입되면 결제 사용자가 미인증 403에 걸린다 | FR-04, FR-08, PRD-D-7 |
-| I-20 | 계정 일일 상한 기준 시각 | 해소(DEC-10). Asia/Seoul 자정 기준("오늘 N회, 내일 0시 초기화"). 429 응답에서 초기화 시각을 안내할 수 있다 | FR-29, D-28, E-14 |
+| I-20 | 계정 일일 상한 기준 시각 | 해소(DEC-10). Asia/Seoul 자정 기준("오늘 N회, 내일 0시 초기화"). 서버는 429 응답에 초기화 시각 필드를 주지 않고 프론트엔드가 고정 문구로 안내한다(해소: 고정 문구 안내, DEC-10) | FR-29, D-28, E-14 |
 | I-21 | 문서 버전 참조 | 해소(도메인 v0.3.3, PRD v0.3.2). PRD 1장 참조 도메인 버전과 도메인 9장 머리말의 PRD 버전을 맞췄다. 도메인 v0.3.2 변경 이력 행의 기준 PRD 버전(v0.3)은 이력이라 수정하지 않는다 | 두 문서 1장·변경 이력·9장 |

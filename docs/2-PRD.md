@@ -1,15 +1,15 @@
-# Coupang AI Detail Maker - PRD (v0.3.9 초안)
+# Coupang AI Detail Maker - PRD (v0.3.12 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 제품 요구사항 정의서(PRD) |
-| 버전 | v0.3.9 (초안) |
+| 버전 | v0.3.12 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.10 |
-| 참조 문서 | `prompts/PRD생성.md` (PRD 작성 지침, 우선 적용), `docs/1-domain-definition.md` (도메인 정의서 v0.3.10), `valuate/1-domain-definition-v0.2-evaluation.md` (도메인 평가 38/50) |
+| 기준 도메인 정의서 버전 | v0.3.13 |
+| 참조 문서 | `prompts/PRD생성.md` (PRD 작성 지침, 우선 적용), `docs/1-domain-definition.md` (도메인 정의서 v0.3.13), `valuate/1-domain-definition-v0.2-evaluation.md` (도메인 평가 38/50) |
 | 우선순위 원칙 | PRD 지침과 도메인 정의서가 충돌하면 PRD 지침을 따른다. v0.1의 충돌 목록(10장)은 도메인 v0.3에서 모두 반영됐다 |
 
 **표기 규약**
@@ -23,6 +23,9 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.3.12 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리: FR-29(429 초기화 시각은 프론트 고정 문구로 안내, DEC-10), 7.2 표 머리말의 도메인 버전 |
+| v0.3.11 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.12 | 백엔드 구현 기준 최신화: 7.2 표(Routes에 `me`, `requireAuth` 구현 범위, 머리말의 도메인 버전), 8장(표의 미구현 S 경로 표시, 구현 확정 응답 문단에 응답 형태·400 판정 시점). 규칙 변경 없음 |
+| v0.3.10 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.11 | 개발용 CORS·Swagger UI 반영: NFR-09, 7.2 표 머리말의 도메인 버전, 8장(개발용 경로 문단), 11.2 PRD-D-2(7.1·7.6 본문은 변경 없음) |
 | v0.3.9 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.10 | 백엔드 구현 [가정] 반영: FR-14, FR-22(이미지 참조·공개 키·재시도 시점), 5.8 클레임(`iss`·`aud`), 7.2 표(`assertEligible(userId, db)`, 머리말의 도메인 버전), 7.3 문구, 8장(구현 확정 응답 문단), 11.1 PRD-R-12·PRD-R-13·PRD-R-14 신설 |
 | v0.3.8 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | DB-01~03 구현 후속 정합화: NFR-07(비밀값 스캔 패턴 `DATABASE_URL` → `postgresql://`), 7.2 표 머리말의 도메인 버전 |
 | v0.3.7 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. FR-06, FR-10, FR-21, 4.2 PG 결제 행, 5.8 클레임 문구, 7.2 표, 7.3 SQL, 7.5 다이어그램, 9장 P2 1~2일 차, 10장 #7 |
@@ -179,7 +182,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 |---|---|---|---|---|
 | FR-27 | M | LLM 어댑터: 도메인 코드는 `callRole('LIGHT' \| 'MAIN', input)`만 호출. Provider와 모델 ID는 서버 환경변수로 매핑 | BR-70, 71 | 환경변수만 바꿔 Gemini에서 Claude로 전환, 서비스 코드 수정 0줄 |
 | FR-28 | M | 모든 LLM 호출(실패 포함)을 LlmUsageLog에 기록(role, provider, model, tokens, latency, costEstimate, success, userId) | BR-73 | 호출 N회 = 로그 N건 |
-| FR-29 | M | **계정 단위 LLM 상한**: 사용자별 1일 MAIN 호출 20회, LIGHT 호출 50회(실패 포함, LlmUsageLog 집계 기준, D-28). "1일"은 Asia/Seoul 자정 기준이며 집계는 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`, 429 응답에 초기화 시각(다음 0시)을 안내할 수 있다. 초과 시 LLM을 호출하지 않고 429(LlmCallRejected) `[가정]` | BR-75, D-28, R-6 | AC-BR75. 21번째 MAIN 요청은 429, LLM 호출 0회 |
+| FR-29 | M | **계정 단위 LLM 상한**: 사용자별 1일 MAIN 호출 20회, LIGHT 호출 50회(실패 포함, LlmUsageLog 집계 기준, D-28). "1일"은 Asia/Seoul 자정 기준이며 집계는 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`, 초기화 시각은 고정이라 429 응답에 별도 필드를 두지 않고(`{error:{code,message}}` 유지) 프론트엔드가 고정 문구("내일 0시(한국 시간)에 초기화")로 안내한다(DEC-10). 초과 시 LLM을 호출하지 않고 429(LlmCallRejected) `[가정]` | BR-75, D-28, R-6 | AC-BR75. 21번째 MAIN 요청은 429, LLM 호출 0회 |
 | FR-30 | C | Provider가 Anthropic이면 고정 시스템 프롬프트에 Prompt Caching 적용 | BR-72 | 캐시 TTL 안에서 두 번째 호출의 cached=true |
 
 ### 5.7 SEO 랜딩
@@ -232,7 +235,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 | NFR-06 | 성능 | 정적 자원 | 랜딩과 SPA 번들은 Express가 서빙하고 앞단 Cloudflare 프록시(무료 CDN 캐시)가 캐시한다. 랜딩 LCP 2.5초 이하 |
 | NFR-07 | 보안 | 비밀값 위치 | LLM·DB·PG 키는 백엔드 환경변수에만 둔다. 프론트 번들과 확장 패키지에서 `sk-`, `AIza`, `postgresql://` 패턴 0건(BR-63, 71) |
 | NFR-08 | 보안 | 콘텐츠 보호 | 퍼블리시 전 모든 API 응답에 원본 이미지 경로, 최종 HTML, 공개 URL 0건. 워터마크 해제 파라미터 없음(BR-32, 50~54, 66) |
-| NFR-09 | 보안 | 토큰 | Access Token은 헤더로만 전송하므로 일반 API는 쿠키 기반 CSRF 대상이 아니다. Refresh Token 쿠키는 HttpOnly·Secure·SameSite=Strict·`Path=/api/auth`로 제한하고, `/api/auth/refresh`·`/logout`은 Origin 헤더를 검사한다. 프론트와 API가 단일 도메인·동일 출처라 CORS는 쓰지 않는다(Origin 검사는 유지). 토큰 문자열은 로그·URL에 남기지 않는다. JWT 비밀키는 NFR-07과 같이 백엔드 환경변수에만 둔다 |
+| NFR-09 | 보안 | 토큰 | Access Token은 헤더로만 전송하므로 일반 API는 쿠키 기반 CSRF 대상이 아니다. Refresh Token 쿠키는 HttpOnly·Secure·SameSite=Strict·`Path=/api/auth`로 제한하고, `/api/auth/refresh`·`/logout`은 Origin 헤더를 검사한다. 프론트와 API가 운영에서 단일 도메인·동일 출처라 CORS가 필요 없고, 개발 편의를 위해 `FRONTEND_ORIGIN` 하나만 CORS로 허용한다(`*` 미허용, Origin 검사는 유지). 토큰 문자열은 로그·URL에 남기지 않는다. JWT 비밀키는 NFR-07과 같이 백엔드 환경변수에만 둔다 |
 | NFR-10 | 보안 | LLM 출력 안전성 | 서버에서 script, 이벤트 핸들러 속성, `javascript:` URL을 제거. 프리뷰는 sandbox iframe으로 렌더링 |
 | NFR-11 | 보안 | 크롤링 원문 | DB, 저장소, 로그에 저장하지 않는다(BR-22). 요청 로그에 본문을 남기지 않는다 |
 | NFR-12 | 가용성 | 가동률 | 월 99.5%(MVP). 헬스체크 `/healthz`, 프로세스 자동 재시작(PM2) |
@@ -266,10 +269,10 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 
 ### 7.2 백엔드 구조 (도메인 개념 대응)
 
-| 도메인 정의서 v0.3.10 | PRD(Express) |
+| 도메인 정의서 v0.3.13 | PRD(Express) |
 |---|---|
-| 인증 미들웨어 / 자격 검사(P-3) | `requireAuth`(Bearer JWT: Access Token 또는 확장 토큰, 인증만) + 자격 판정 함수 `assertEligible(userId, db)`(FR-06, DB 조회형, 퍼블리시 TX 안에서는 같은 client로 재사용). 프로젝트 대상 API는 서비스가 프로젝트 조회 직후, `POST /api/projects`는 라우트에서 호출한다 |
-| Routes(DG-3) | Express Router: `routes/auth`, `projects`, `analyze`, `generate`, `edit`, `publish` |
+| 인증 미들웨어 / 자격 검사(P-3) | `requireAuth`(Bearer JWT: Access Token 또는 확장 토큰, 인증만. 현재 구현은 Access Token만, 확장 토큰은 BE-20) + 자격 판정 함수 `assertEligible(userId, db)`(FR-06, DB 조회형, 퍼블리시 TX 안에서는 같은 client로 재사용). 프로젝트 대상 API는 서비스가 프로젝트 조회 직후, `POST /api/projects`는 라우트에서 호출한다 |
+| Routes(DG-3) | Express Router: `routes/auth`, `me`, `projects`, `analyze`, `generate`, `edit`, `publish` |
 | pg 트랜잭션(P-5) | `pg` 트랜잭션 함수(`withTx(fn)` 하나) |
 | 사용 한도 선점·진행 중 작업(BR-39, BR-47) | `UPDATE projects SET regen_count = regen_count + 1, active_job_type='REGEN', active_job_started_at=now() WHERE id=$1 AND version=$2 AND active_job_type IS NULL AND regen_count < 3 RETURNING *` (0행이면 원인에 따라 409 또는 429) |
 | 백엔드 환경변수(P-2) | 서버 환경변수(`.env`는 배포 시크릿으로 주입) |
@@ -374,8 +377,8 @@ flowchart LR
 | POST /api/auth/signup, /login | Credentials 인증, Access Token(body) + Refresh Token(쿠키) 발급 | - | FR-01, FR-36 |
 | POST /api/auth/refresh | Refresh Token 회전, 새 Access Token 발급, 재사용 탐지 | `rt` 쿠키 + Origin 검사 | FR-37, FR-38, FR-40 |
 | POST /api/auth/logout | Refresh Token 패밀리 폐기, 쿠키 삭제 | `rt` 쿠키 + Origin 검사 | FR-39 |
-| GET /api/auth/google, /google/callback | Google OAuth(콜백은 `rt` 쿠키만 설정) | - | FR-02, FR-36 |
-| POST /api/auth/verify-email | 이메일 인증 확인(EmailVerified) | - | FR-04 |
+| GET /api/auth/google, /google/callback | 미구현(S, BE-16). Google OAuth(콜백은 `rt` 쿠키만 설정) | - | FR-02, FR-36 |
+| POST /api/auth/verify-email | 미구현(S, BE-17). 이메일 인증 확인(EmailVerified) | - | FR-04 |
 | GET /api/me | 사용자·잔액·이메일 인증 여부 조회 | Access Token | FR-01, FR-06 |
 | POST /api/projects | 프로젝트 생성(body `form` 선택) | Access Token + 자격 | FR-10 |
 | PUT /api/projects/:id/form | 폼 저장 `{form, version}`. DRAFT·ANALYZED만, 그 외 409 `*` | Access Token + 자격 | FR-10, FR-34, FR-35 |
@@ -387,15 +390,19 @@ flowchart LR
 | POST /api/projects/:id/regenerate | 재생성 `*` | Access Token + 자격 | FR-15, FR-34, FR-35 |
 | GET /api/projects/:id/preview | 워터마크 프리뷰 HTML(이미지는 data URI)과 편집용 `blocks` | Access Token | FR-16, FR-17 |
 | POST /api/projects/:id/edits | 수동 편집 `{blockId, editId, text, version}` `*` | Access Token + 자격 | FR-17, FR-34, FR-35 |
-| POST /api/projects/:id/ai-edits | AI 부분 수정 `*` | Access Token + 자격 | FR-19, FR-34, FR-35 |
+| POST /api/projects/:id/ai-edits | 미구현(S, BE-19). AI 부분 수정 `*` | Access Token + 자격 | FR-19, FR-34, FR-35 |
 | POST /api/projects/:id/publish | 퍼블리시 TX `*` | Access Token + 자격(PUBLISHED 재요청은 자격 전 처리, FR-06) | FR-21, FR-22, FR-34, FR-35 |
-| GET /api/projects/:id/final | 최종 HTML(PUBLISHED만) | Access Token 또는 확장 토큰 | FR-22, FR-23 |
-| POST /api/projects/:id/extension-token | 확장 토큰 발급 | Access Token(자격 무관) | FR-24 |
-| POST /api/projects/:id/publish-report | 주입 결과 보고 | 확장 토큰 | FR-25 |
-| POST /api/billing/checkout, /webhook | 충전 결제, PG 웹훅(서명 검증) | Access Token / 서명 | FR-08 |
+| GET /api/projects/:id/final | 최종 HTML(PUBLISHED만) | Access Token(확장 토큰 허용은 미구현, S, BE-20) | FR-22, FR-23 |
+| POST /api/projects/:id/extension-token | 미구현(S, BE-20). 확장 토큰 발급 | Access Token(자격 무관) | FR-24 |
+| POST /api/projects/:id/publish-report | 미구현(S, BE-20). 주입 결과 보고 | 확장 토큰 | FR-25 |
+| POST /api/billing/checkout, /webhook | 미구현(S, BE-18). 충전 결제, PG 웹훅(서명 검증) | Access Token / 서명 | FR-08 |
 | GET /healthz | 헬스체크 | - | NFR-12 |
 
-**구현 확정 응답(백엔드 BE-01b~BE-15)**: `signup` 201, `login`·`refresh` 200(둘 다 body `{accessToken, expiresIn}`), `logout` 204(`rt`가 없거나 무효여도 204). 중복 이메일 가입과 USP 0개 저장은 400 `VALIDATION_FAILED`. 업로드는 multipart 필드 `file` 1장, 성공 201 `{id}`. 분석 body `{url, version}`, 편집 body는 키가 정확히 `blockId, editId, text, version` 4개. `GET /preview`는 `{version, html, blocks}`, 생성 전(draft 없음) 요청과 GENERATED·EDITING이 아닌 상태의 퍼블리시는 409 `INVALID_STATE`. uuid 형식이 아닌 프로젝트 id는 404. `GET /healthz`는 200 `{status:'ok'}` / 503 `{status:'unavailable'}`.
+**구현 확정 응답(백엔드 BE-01b~BE-15)**: `signup` 201, `login`·`refresh` 200(둘 다 body `{accessToken, expiresIn}`), `logout` 204(`rt`가 없거나 무효여도 204). 중복 이메일 가입과 USP 0개 저장은 400 `VALIDATION_FAILED`. 업로드는 multipart 필드 `file` 1장, 성공 201 `{id}`. 분석 body `{url, version}`, 편집 body는 키가 정확히 `blockId, editId, text, version` 4개. `GET /preview`는 `{version, html, blocks}`, 생성 전(draft 없음) 요청과 GENERATED·EDITING이 아닌 상태의 퍼블리시는 409 `INVALID_STATE`. uuid 형식이 아닌 프로젝트 id는 404(인증보다 먼저 판정). `GET /healthz`는 200 `{status:'ok'}` / 503 `{status:'unavailable'}`.
+
+**구현 확정 응답 형태**: `GET /api/me`는 `{email, emailVerified, balance}`. 프로젝트 생성(201)·목록·상세·폼 저장·USP 저장은 `toProject`(`id, status, version, form, selectedUsps, analyzeCount, regenCount, aiEditCount, aiEditFailCount, activeJobType, publishedAt, createdAt`, 목록은 최신순 배열). `generate`·`regenerate`·`edits`·`GET /preview`는 `{version, html, blocks}`. `analyze`는 `{sourceUrl, uspCandidates, analyzedAt}`이며 새 version을 담지 않으므로 클라이언트가 프로젝트를 다시 조회한다. `publish`·`GET /final`은 `{finalHtml}`. 오류는 `{error:{code,message}}`. 입력 형식 400(`version`이 1 이상 정수가 아님, form 값 타입·길이, 분석 URL 패턴, 편집 body 형식, 업로드 크기·MIME)은 DB 조회 전에 판정해 404·409·403·402보다 먼저이고, 잘못된 JSON·1MB 초과 400은 인증보다도 먼저다. 생성 필수값·이미지 1장 이상·USP 후보 대조·편집 대상 `editId`·업로드 실제 이미지 판독과 10장 상한 400은 소유·상태·자격·version 검사 뒤다.
+
+**개발용 경로**: `NODE_ENV`가 production이 아닐 때만 `GET /api-docs`(Swagger UI)와 `GET /api-docs/swagger.yaml`(명세 파일)을 제공한다. 인증은 필요 없고 운영에서는 등록하지 않는다. 같은 개발 환경에서 Vite(5173)가 백엔드(3000)를 직접 호출할 수 있도록 CORS는 `FRONTEND_ORIGIN` 하나만 허용한다(허용 출처에만 `Access-Control-Allow-Origin`·`Allow-Credentials: true`, preflight는 204, 항상 `Vary: Origin`).
 
 ---
 
@@ -480,7 +487,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눈다(4.1, 4.2). Task
 | ID | 항목 | 현재 제안 | 기한 |
 |---|---|---|---|
 | PRD-D-1 | 인증 방식 | **확정(v0.3)**: JWT + Access Token(15분, 메모리) + Refresh Token(14일, httpOnly 쿠키, 회전·재사용 탐지). 명세는 5.8절. 만료 시간은 `[가정]`. 도메인 D-1 확정(v0.3.2) | 확정 |
-| PRD-D-2 | 백엔드·프론트 호스팅 | **확정(2026-09-30 Claude 위임 결정)**: 단일 도메인·동일 출처. Express가 `frontend/dist`를 서빙하고 `/api/*`를 처리, 앞단 Cloudflare 프록시(CDN 캐시). CORS 불필요, `SameSite=Strict` 쿠키 동작(구조 원칙 C-3, D-31). Cloudflare Pages 등 별도 정적 호스팅은 쓰지 않음 | 확정 |
+| PRD-D-2 | 백엔드·프론트 호스팅 | **확정(2026-09-30 Claude 위임 결정)**: 단일 도메인·동일 출처. Express가 `frontend/dist`를 서빙하고 `/api/*`를 처리, 앞단 Cloudflare 프록시(CDN 캐시). 운영은 CORS 없이 `SameSite=Strict` 쿠키 동작(구조 원칙 C-3, D-31). 개발용 CORS는 `FRONTEND_ORIGIN` 하나만 허용. Cloudflare Pages 등 별도 정적 호스팅은 쓰지 않음 | 확정 |
 | PRD-D-3 | 오브젝트 스토리지 | **확정(2026-09-30 Claude 위임 결정)**: Cloudflare R2(S3 호환). 비공개·공개 버킷 2개. 이그레스 무료, PRD-D-2의 Cloudflare와 일치(D-31) | 확정 |
 | PRD-D-4 | 출력 스타일 | **확정(2026-09-30 Claude 위임 결정)**: 인라인 CSS 전용(D-16). PRD-V-7 실측은 검증 Task이며 막히면 재결정 | 확정(PRD-V-7 실측 시 재검토) |
 | PRD-D-5 | 계정 일일 LLM 상한값 | MAIN 20회, LIGHT 50회(값의 원천은 D-28). "1일"은 Asia/Seoul 자정 기준으로 확정 | 베타 원가 측정 후 |

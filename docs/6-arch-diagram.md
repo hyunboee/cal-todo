@@ -1,16 +1,16 @@
-# Coupang AI Detail Maker - 기술 아키텍처 다이어그램 (v0.1.10 초안)
+# Coupang AI Detail Maker - 기술 아키텍처 다이어그램 (v0.1.13 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 기술 아키텍처 다이어그램 |
-| 버전 | v0.1.10 (초안) |
+| 버전 | v0.1.13 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.10 (`docs/1-domain-definition.md`) |
-| 기준 PRD 버전 | v0.3.9 (`docs/2-PRD.md`) |
-| 기준 구조 원칙 버전 | v0.1.10 (`docs/5-project-principle.md`) |
+| 기준 도메인 정의서 버전 | v0.3.13 (`docs/1-domain-definition.md`) |
+| 기준 PRD 버전 | v0.3.12 (`docs/2-PRD.md`) |
+| 기준 구조 원칙 버전 | v0.1.13 (`docs/5-project-principle.md`) |
 | 범위 | 전체 구성 1장과 복잡한 비즈니스 로직 5장. 세부 API·테이블·라이브러리는 PRD와 구조 원칙을 따른다 |
 
 **표기 규약**
@@ -24,6 +24,9 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 | 기준 PRD | 기준 구조 원칙 | 변경내용 |
 |---|---|---|---|---|---|---|
+| v0.1.13 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.13 | v0.3.12 | v0.1.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리: 기준 문서 버전 갱신만(다이어그램 변경 없음) |
+| v0.1.12 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.12 | v0.3.11 | v0.1.12 | 백엔드 구현 기준 최신화: 3장 퍼블리시 TX 다이어그램(기존 결과 노드의 사본 재시도, 상태 확인 라벨). 다른 다이어그램은 서비스 코드 순서와 일치해 변경 없음 |
+| v0.1.11 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.11 | v0.3.10 | v0.1.11 | 개발용 CORS·Swagger UI 반영: 2장 구성도 설명 문구(CORS). Mermaid 변경 없음 |
 | v0.1.10 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.10 | v0.3.9 | v0.1.10 | 백엔드 구현 [가정] 반영: 기준 문서 버전 갱신만(다이어그램 변경 없음) |
 | v0.1.9 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | v0.3.8 | v0.1.9 | DB-01~03 구현 후속 정합화: 기준 문서 버전 갱신만(다이어그램 변경 없음) |
 | v0.1.8 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | v0.3.7 | v0.1.8 | 기준 구조 원칙 버전 갱신만 반영 |
@@ -88,7 +91,7 @@ flowchart LR
     class EXT s
 ```
 
-- 랜딩(정적 HTML)과 SPA는 Express가 `frontend/dist`로 서빙하고 앞단 Cloudflare 프록시가 캐시한다. 프론트와 API가 같은 출처라 CORS는 없다. 모든 비즈니스 규칙은 Express 백엔드 하나에서 판정한다(P-1, PP-02).
+- 랜딩(정적 HTML)과 SPA는 Express가 `frontend/dist`로 서빙하고 앞단 Cloudflare 프록시가 캐시한다. 프론트와 API가 운영에서 같은 출처라 CORS가 필요 없다(개발용으로 `FRONTEND_ORIGIN` 하나만 허용). 모든 비즈니스 규칙은 Express 백엔드 하나에서 판정한다(P-1, PP-02).
 - 백엔드 안은 `requireAuth → 라우트 → 서비스` 한 줄이고 자격 검사(`assertEligible`)는 서비스가 프로젝트를 조회한 직후 한다. 프리뷰 합성·퍼블리시 TX·주기 작업도 여기에 있다. LLM 호출만 어댑터로 분리해 Role 매핑·세마포어·일일 상한을 모은다(LY-01, LY-04).
 - 정합성은 PostgreSQL 제약과 TX가, 과부하는 어댑터의 동시성 한도가 막는다. LLM 대기 중에는 DB 커넥션을 잡지 않는다(P-5, P-7).
 - 스토리지(Cloudflare R2)는 비공개(원본·프리뷰 사본)와 공개(퍼블리시 이미지)로 나뉘고, WING은 공개 사본만 읽는다(BR-66).
@@ -104,10 +107,10 @@ flowchart LR
 flowchart TD
     A["POST publish + version"] --> C["BEGIN<br/>프로젝트 행 FOR UPDATE"]
     C --> D{"이미 PUBLISHED?"}
-    D -->|예| OK["기존 최종 HTML 반환<br/>추가 차감 없음"]
+    D -->|예| OK["기존 최종 HTML 반환<br/>추가 차감 없음<br/>COMMIT 뒤 사본 재시도"]
     D -->|아니오| B{"이메일 인증 · 잔액 선검사<br/>잔액 1 이상"}
     B -->|미충족| X1["ROLLBACK · 403 / 402"]
-    B --> E{"version 일치 +<br/>진행 중 작업 없음?"}
+    B --> E{"version 일치 · 진행 중 작업 없음<br/>상태 GENERATED 또는 EDITING?"}
     E -->|아니오| X2["ROLLBACK · 409"]
     E -->|예| F["DEDUCT 원장 INSERT<br/>ON CONFLICT DO NOTHING"]
     F -->|0행| OK

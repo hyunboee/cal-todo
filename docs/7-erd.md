@@ -1,14 +1,14 @@
-# Coupang AI Detail Maker - ERD (v0.1.10 초안)
+# Coupang AI Detail Maker - ERD (v0.1.13 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 데이터 모델(ERD) |
-| 버전 | v0.1.10 (초안) |
+| 버전 | v0.1.13 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 문서 버전 | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10 |
+| 기준 문서 버전 | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13 |
 | 범위 | PostgreSQL 17 논리·물리 모델. 물리 설계는 PRD 7.4를 기준으로 하고 도메인 엔티티·BR로 제약을 보강했다. SQL 파일은 만들지 않는다(마이그레이션은 OP-10) |
 
 **표기 규약**
@@ -23,6 +23,9 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.13 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리: 8장 E-14. 스키마 변경 없음(`docs/schema.sql` 미수정) |
+| v0.1.12 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.12, PRD v0.3.11, 시나리오 v0.1.10, 와이어프레임 v0.1.10, 구조 원칙 v0.1.12, 아키텍처 v0.1.12 | 백엔드 구현 기준 최신화: 기준 문서 버전 갱신만(`migrations/001_init.sql`·서비스 SQL과 4~6장이 일치해 본문 변경 없음). 스키마 변경 없음(`docs/schema.sql` 미수정) |
+| v0.1.11 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.11, PRD v0.3.10, 시나리오 v0.1.9, 와이어프레임 v0.1.9, 구조 원칙 v0.1.11, 아키텍처 v0.1.11 | 개발용 CORS·Swagger UI 반영: 기준 문서 버전 갱신만(본문 변경 없음). 스키마 변경 없음(`docs/schema.sql` 미수정) |
 | v0.1.10 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.10, PRD v0.3.9, 시나리오 v0.1.8, 와이어프레임 v0.1.8, 구조 원칙 v0.1.10, 아키텍처 v0.1.10 | 백엔드 구현 [가정] 반영: 4.3 refresh_tokens.created_at(30일 판정 한계), 4.7 assets.public_key(공개 키 형식), 7장 공개 사본 재시도 행, 8장 E-13(해소). 스키마 변경 없음(`docs/schema.sql` 미수정) |
 | v0.1.9 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.9, PRD v0.3.8, 시나리오 v0.1.7, 와이어프레임 v0.1.7, 구조 원칙 v0.1.9, 아키텍처 v0.1.9 | DB-01~03 구현 후속 정합화: 기준 문서 버전 갱신만(본문 변경 없음). 스키마 변경 없음(`docs/schema.sql` 머리말의 근거 ERD 버전만 갱신) |
 | v0.1.8 | 2026-09-30 | hyunboee (Claude 작성) | 도메인 v0.3.8, PRD v0.3.7, 시나리오 v0.1.6, 와이어프레임 v0.1.6, 구조 원칙 v0.1.8, 아키텍처 v0.1.8 | 기준 문서 버전 갱신만 반영 |
@@ -514,4 +517,4 @@ erDiagram
 | E-11 | AI 수정 대화 보관 | 서버 보관이면 `edit_operations.payload`(type=AI)에 지시문을 담을지 결정 필요(S) | N-12, FR-19 |
 | E-12 | payments.status·구독 원장 | payments.status 값 정의가 없다. 또 BR-17은 갱신 시 EXPIRE와 GRANT를 같은 TX로 기록하는데 둘 다 pg_tx_id를 가지면 `UNIQUE(pg_tx_id)`에 걸린다. EXPIRE는 pg_tx_id NULL로 둘지 결정 필요(W) | BR-17, FR-08 |
 | E-13 | 재생성과 edit_operations | 해소(구현): 재생성은 draft_html만 교체하고 edit_operations 행은 기록으로 남긴다. BR-34는 재생성 시 수동 편집을 초기화한다 | BR-34, I-14 |
-| E-14 | 계정 일일 상한 기준 시각 | 해소(DEC-10, Asia/Seoul 자정 기준). 집계는 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`. 인덱스 변경 없음 | I-20, FR-29 |
+| E-14 | 계정 일일 상한 기준 시각 | 해소(DEC-10, Asia/Seoul 자정 기준). 집계는 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`. 인덱스 변경 없음. 429 응답에 초기화 시각 필드는 없고 프론트엔드가 고정 문구로 안내한다(해소: 고정 문구 안내) | I-20, FR-29 |

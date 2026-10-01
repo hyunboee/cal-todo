@@ -78,7 +78,7 @@ test('BE-01a ⑤ 응답 전송 후 오류는 next(err)로 넘긴다', () => {
   assert.equal(passed, err)
 })
 
-test('BE-01a ⑥ 어떤 Origin에도 Access-Control-Allow-* 헤더 없음, x-powered-by 없음', async () => {
+test('BE-01a ⑥ 허용되지 않은 Origin에는 Access-Control-Allow-* 헤더 없음, x-powered-by 없음', async () => {
   const headers = { Origin: 'https://evil.example', 'Access-Control-Request-Method': 'GET' }
   for (const method of ['GET', 'OPTIONS']) {
     const res = await fetch(`${base}/healthz`, { method, headers })
@@ -99,4 +99,30 @@ test('BE-01a ⑦ config.js 밖 process.env 0건(src/, scripts/)', () => {
     }
   }
   assert.deepEqual(found, ['src/config.js'])
+})
+
+test('개발 모드 Swagger UI: /api-docs HTML, /api-docs/swagger.yaml 명세 제공(인증 불요)', async () => {
+  const page = await fetch(`${base}/api-docs`)
+  assert.equal(page.status, 200)
+  assert.match(page.headers.get('content-type'), /text\/html/)
+  const html = await page.text()
+  assert.ok(html.includes('swagger-ui-bundle.js') && html.includes("url: '/api-docs/swagger.yaml'"))
+  const spec = await fetch(`${base}/api-docs/swagger.yaml`)
+  assert.equal(spec.status, 200)
+  assert.ok((await spec.text()).startsWith('openapi: 3.0.3'))
+})
+
+test('CORS: FRONTEND_ORIGIN 요청은 허용 헤더, preflight는 204', async () => {
+  const origin = 'http://localhost:5173'
+  const get = await fetch(`${base}/healthz`, { headers: { Origin: origin } })
+  await get.arrayBuffer()
+  assert.equal(get.headers.get('access-control-allow-origin'), origin)
+  assert.equal(get.headers.get('access-control-allow-credentials'), 'true')
+  assert.match(get.headers.get('vary') ?? '', /Origin/)
+  const pre = await fetch(`${base}/api/me`, { method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'GET', 'Access-Control-Request-Headers': 'authorization' } })
+  await pre.arrayBuffer()
+  assert.equal(pre.status, 204)
+  assert.equal(pre.headers.get('access-control-allow-origin'), origin)
+  assert.match(pre.headers.get('access-control-allow-headers'), /Authorization/)
+  assert.match(pre.headers.get('access-control-allow-methods'), /PUT/)
 })

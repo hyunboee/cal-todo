@@ -1,16 +1,16 @@
-# Coupang AI Detail Maker - 프로젝트 구조 설계 원칙 (v0.1.10 초안)
+# Coupang AI Detail Maker - 프로젝트 구조 설계 원칙 (v0.1.13 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 프로젝트 구조 설계 원칙 |
-| 버전 | v0.1.10 (초안) |
+| 버전 | v0.1.13 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
-| 기준 도메인 정의서 버전 | v0.3.10 (`docs/1-domain-definition.md`) |
-| 기준 PRD 버전 | v0.3.9 (`docs/2-PRD.md`) |
-| 참고 | `docs/3-user-scenario.md` v0.1.8, `docs/4-wireframes.md` v0.1.8, `CLAUDE.md`(오버엔지니어링 금지, 단순함 우선) |
+| 기준 도메인 정의서 버전 | v0.3.13 (`docs/1-domain-definition.md`) |
+| 기준 PRD 버전 | v0.3.12 (`docs/2-PRD.md`) |
+| 참고 | `docs/3-user-scenario.md` v0.1.11, `docs/4-wireframes.md` v0.1.11, `CLAUDE.md`(오버엔지니어링 금지, 단순함 우선) |
 | 범위 | 레이어·의존 방향, 네이밍, 테스트, 설정·보안·운영, 디렉토리 구조. 기능 명세는 PRD를 따른다 |
 
 **표기 규약**
@@ -25,6 +25,9 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 | 기준 PRD | 변경내용 |
 |---|---|---|---|---|---|
+| v0.1.13 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.13 | v0.3.12 | 의존 예외(require-auth)·일일 상한 안내 방식 정리: LY-06, 3.1 허용/금지 의존 표(middleware 행) |
+| v0.1.12 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.12 | v0.3.11 | 백엔드 구현 기준 최신화: LY-05(uuid 검사 위치, 정적 서빙 미구현 표시), LY-06(확장 토큰 허용 라우트 미구현), 6.1(`NODE_ENV`·`PORT` 기본값, S3 필수 변수, 구현된 상수 보충), OP-12(SIGINT), 7.3 디렉토리(package.json 스크립트, routes·lib·test 목록, 정적 서빙 미구현 표시) |
+| v0.1.11 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.11 | v0.3.10 | 개발용 CORS·Swagger UI 반영: LY-05, 3.5(쓰지 않음 행), 6.1 `FRONTEND_ORIGIN` 행, OP-04, 7.3 디렉토리(middleware), 8.2 C-3 |
 | v0.1.10 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.10 | v0.3.9 | 백엔드 구현 [가정] 반영: LY-05(일반 리밋은 `requireAuth` 뒤, signup·logout 리밋 없음), LY-06(`assertEligible(userId, db)`), 3.5(prettier 미설치), 4.2(코드 사용 확정), 6.1(환경변수·dev 기본값·스토리지 드라이버), 6.1 아래 상수 문단, OP-06, OP-07(`src`는 `asset:{uuid}`만), OP-12(본문), 8.2 C-6(해소) |
 | v0.1.9 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.9 | v0.3.8 | DB-01~03 구현 후속 정합화: 6.1 환경변수(`DATABASE_URL` → `DB_CONN_STRING`, `.env.test`, 작업 주기 선택 키 2개), 5.2 비밀값 스캔 행(P2, `postgresql://`) |
 | v0.1.8 | 2026-09-30 | hyunboee (Claude 작성) | v0.3.8 | v0.3.7 | QA-02: 테스트 DB 위치를 로컬 Docker에서 로컬 설치 PostgreSQL 17 서버로 변경 |
@@ -71,8 +74,8 @@
 | LY-02 | services는 `req`/`res`를 모른다. 평범한 인자(userId, projectId, body)를 받고 평범한 객체를 돌려주며, 실패는 `AppError(status, code)`를 던진다 | - |
 | LY-03 | TX는 `db.js`의 `withTx(fn)` 하나로만 연다. TX에 참여해야 하는 함수는 `client`를 인자로 받는다. `withTx` 안에서 LLM·크롤링·스토리지 호출 금지 | P-5, P-7, PRD 7.2 |
 | LY-04 | LLM 어댑터는 `llm/index.js` 하나다. Role 매핑, 세마포어·대기열, 계정 일일 상한, 사용량 로그를 모두 이 안에서 처리한다. 서비스는 이 모듈의 `callRole`만 import한다 | FR-27~29, NFR-03, BR-70 |
-| LY-05 | 미들웨어 순서: `requestLog` → `express.json` → (auth 라우터: `cookieParser`, Origin 검사, 로그인·refresh 전용 리밋) → `requireAuth` → `rateLimit`(일반, 사용자당이라 `requireAuth` 뒤. signup·logout은 리밋 없음) → 라우트 핸들러 → `errorHandler`(마지막). `/api/projects/:id`는 uuid 형식이 아니면 404. 자격 검사는 미들웨어가 아니다(LY-06). 동일 출처라 CORS 미들웨어는 없다. `/api` 밖 경로는 `frontend/dist` 정적 서빙과 SPA 폴백(OP-11) | FR-05, FR-06, NFR-04, NFR-09 |
-| LY-06 | `requireAuth`는 인증만(DB 조회 없음), 자격 판정은 `services/eligibility.js`의 `assertEligible(userId, db)` 한 함수(DB 조회형, 퍼블리시 TX 안에서는 같은 client를 넘겨 재사용)로 두고 자격 검사 대상 API 9종에서만 호출한다. 프로젝트 대상 API는 서비스가 프로젝트를 조회한 직후 소유(404) → PUBLISHED(409, 퍼블리시 재요청은 기존 결과 반환, BR-13) → 403 → 402 → 409(version·진행 중 작업) 순으로 확인하고(퍼블리시는 TX 안에서 같은 순서), 프로젝트가 아직 없는 `POST /api/projects`만 라우트에서 호출한다(BR-10, FR-06). 확장 토큰(`typ=ext`)은 기본 거절하고 `GET /final`, `POST /publish-report` 두 라우트에서만 허용한다 | FR-05, FR-06, FR-24, P-3 |
+| LY-05 | 미들웨어 순서: `cors`(`FRONTEND_ORIGIN` 하나만 허용, 맨 앞) → `requestLog` → `express.json` → (auth 라우터: `cookieParser`, Origin 검사, 로그인·refresh 전용 리밋) → uuid 검사(`/api/projects/:id`가 uuid 형식이 아니면 404, 인증보다 먼저) → `requireAuth` → `rateLimit`(일반, 사용자당이라 `requireAuth` 뒤. signup·logout은 리밋 없음) → 라우트 핸들러 → `errorHandler`(마지막). `GET /healthz`와 개발용 `/api-docs`는 `requestLog` 앞에 둔다(로그·인증 없음). 자격 검사는 미들웨어가 아니다(LY-06). 운영은 동일 출처라 `cors`는 실질 영향이 없다. `NODE_ENV`가 production이 아닐 때만 `/api-docs`(Swagger UI)와 `/api-docs/swagger.yaml`을 등록한다(인증 없음). `/api` 밖 경로의 `frontend/dist` 정적 서빙과 SPA 폴백(OP-11)은 아직 구현되지 않았다(OPS-01) | FR-05, FR-06, NFR-04, NFR-09 |
+| LY-06 | `requireAuth`는 인증만(DB 조회 없음, `services/auth`의 `verifyAccessToken`만 import하는 의존 예외, 3.1 의존 표), 자격 판정은 `services/eligibility.js`의 `assertEligible(userId, db)` 한 함수(DB 조회형, 퍼블리시 TX 안에서는 같은 client를 넘겨 재사용)로 두고 자격 검사 대상 API 9종에서만 호출한다. 프로젝트 대상 API는 서비스가 프로젝트를 조회한 직후 소유(404) → PUBLISHED(409, 퍼블리시 재요청은 기존 결과 반환, BR-13) → 403 → 402 → 409(version·진행 중 작업) 순으로 확인하고(퍼블리시는 TX 안에서 같은 순서), 프로젝트가 아직 없는 `POST /api/projects`만 라우트에서 호출한다(BR-10, FR-06). 확장 토큰(`typ=ext`)은 기본 거절하고 `GET /final`, `POST /publish-report` 두 라우트에서만 허용한다(현재 구현은 거절만, 허용은 BE-20) | FR-05, FR-06, FR-24, P-3 |
 | LY-07 | 주기 작업(선점 만료 복원, 만료 refresh 행 삭제, 원장 대사)은 `jobs/`에서 `setInterval`로 돌린다. 쿼리는 조건부·멱등이어서 PM2 2프로세스가 동시에 돌아도 안전해야 한다 | FR-35, NFR-14, PRD 7.2 |
 
 **허용/금지 의존 방향**
@@ -82,7 +85,7 @@
 | routes | middleware, services, lib | db, llm 직접 호출, SQL |
 | services | db, llm, lib, 다른 service(순환 금지) | express 객체(req/res) |
 | llm | db(사용량 로그·상한 집계), config | services, routes |
-| middleware | lib, config | services의 도메인 로직 |
+| middleware | lib, config | services의 도메인 로직. 예외: require-auth는 services/auth의 verifyAccessToken만 import한다(DB 미사용 순수 함수, 토큰 서명·검증 로직을 한 곳에 두기 위함) |
 | lib (html, storage, crawler, errors) | config | db, services, routes |
 | jobs, scripts | services, db | routes |
 | config | 없음(`process.env`만) | 모든 모듈 |
@@ -131,7 +134,7 @@ pages → components → hooks(TanStack Query) → api(client)
 | 프론트 | `react`, `react-dom`, `typescript`, `vite`, `zustand`, `@tanstack/react-query` | PRD 7.1 |
 | 프론트 신규 | `react-router`: `/app` 아래 6개 화면과 `:id` 파라미터, 뒤로가기(WF 2장) | 신규 |
 | 개발 | `prettier`(신규: 포맷 논쟁 제거. 백엔드는 `.prettierrc`만 두고 패키지는 설치하지 않으며 `npx prettier`로 실행), Vite 템플릿 기본 ESLint, `k6`(PRD 9장, 별도 바이너리) | - |
-| 쓰지 않음 | Prisma(금지), dotenv(`--env-file`), cors(동일 출처라 불필요), helmet, zod·joi(수동 검증), axios(`fetch`), pino·winston(JSON `console.log`), supertest·jest·vitest(`node:test` + `fetch`), UI 키트·CSS 프레임워크 | - |
+| 쓰지 않음 | Prisma(금지), dotenv(`--env-file`), cors 패키지(`middleware/cors.js`로 직접 구현), helmet, zod·joi(수동 검증), axios(`fetch`), pino·winston(JSON `console.log`), supertest·jest·vitest(`node:test` + `fetch`), UI 키트·CSS 프레임워크 | - |
 
 ---
 
@@ -261,24 +264,24 @@ pages → components → hooks(TanStack Query) → api(client)
 
 | 변수 | 용도 | 비고 |
 |---|---|---|
-| `NODE_ENV`, `PORT` | 실행 환경 | |
+| `NODE_ENV`, `PORT` | 실행 환경. 선택, 기본 `development` / `3000`. `NODE_ENV=production`이면 배포 변수(`FRONTEND_ORIGIN`, `LLM_*`, `S3_ENDPOINT`, `PUBLIC_IMAGE_BASE_URL`)가 필수 | OP-01 |
 | `DB_CONN_STRING` | pg Pool 접속 | |
 | `.env.test`의 `DB_CONN_STRING` | 테스트 DB 접속. 같은 키에 값은 `cal-todo-test` DB | QA-02, gitignore 대상 |
 | `JOB_RESERVATION_INTERVAL_MS` | 선점 만료 복원 작업 주기. 선택, 기본 60000 | D-30 |
 | `JOB_DAILY_INTERVAL_MS` | 일 단위 작업 주기. 선택, 기본 86400000 | |
-| `FRONTEND_ORIGIN` | Origin 검사 대상 1개(서비스 도메인, CORS는 쓰지 않음). production 필수, 그 외 기본 `http://localhost:5173` | NFR-09 |
+| `FRONTEND_ORIGIN` | Origin 검사 대상 1개(서비스 도메인)이자 CORS 허용 출처 1개. production 필수, 그 외 기본 `http://localhost:5173` | NFR-09 |
 | `TRUST_PROXY` | 앞단 프록시 홉 수. 선택, 기본 0(Cloudflare 뒤 배포 시 1) | NFR-04 |
 | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | 서로 다른 32바이트 이상 난수 | PRD 5.8 |
 | `JWT_EXT_SECRET` | 확장 토큰 서명 (S) | FR-24 |
 | `JWT_ACCESS_TTL_SEC` | 기본 900. 테스트에서만 줄인다 | QA-05 |
 | `LLM_MAIN`, `LLM_LIGHT` | `provider:modelId` (`google:…`, `anthropic:…`, `mock:ok`). production 필수, 그 외 기본 `mock:ok`. google·anthropic이면 해당 API 키가 없을 때 시작 실패 | FR-27, PRD 7.2 |
 | `GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY` | AI SDK 기본 변수명 그대로(SDK가 자동으로 읽음) | BR-71 |
-| `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | 스토리지 접속(Cloudflare R2: 엔드포인트는 R2 계정 S3 API URL, region은 `auto`). `S3_ENDPOINT`가 있으면 R2(S3 드라이버, `STORAGE_DRIVER='s3'`)이고 나머지 S3_* 4개가 필수, 없으면 로컬 파일시스템 드라이버(개발·테스트). production은 `S3_ENDPOINT` 필수 | PRD-D-3 |
+| `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | 스토리지 접속(Cloudflare R2: 엔드포인트는 R2 계정 S3 API URL, region은 `auto`). `S3_ENDPOINT`가 있으면 R2(S3 드라이버, `STORAGE_DRIVER='s3'`)이고 `S3_ACCESS_KEY_ID`·`S3_SECRET_ACCESS_KEY`·`S3_PRIVATE_BUCKET`·`S3_PUBLIC_BUCKET` 4개가 필수(`S3_REGION`은 기본 `auto`), 없으면 로컬 파일시스템 드라이버(개발·테스트). production은 `S3_ENDPOINT` 필수 | PRD-D-3 |
 | `STORAGE_LOCAL_DIR` | `S3_ENDPOINT`가 없을 때 로컬 저장 디렉터리. 선택, 기본 `.storage`(테스트는 `.storage-test`) | DEC-07 |
 | `S3_PRIVATE_BUCKET`, `S3_PUBLIC_BUCKET`, `PUBLIC_IMAGE_BASE_URL` | 원본·프리뷰 / 공개 사본 / 최종 HTML의 img 기준 URL. `PUBLIC_IMAGE_BASE_URL`은 production 필수, 그 외 기본 `http://localhost:3000/public-images`, 끝 `/` 제거. 로컬 드라이버에서는 `/public-images`를 서빙하지 않아 로컬 최종 HTML의 이미지는 깨진다(개발 한계) | FR-22 |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | (S) OAuth | FR-02 |
 
-`iss`·`aud`, Pool `max=20`, 상한·동시성 수치(D-5·20·27~30, NFR-03~05)는 환경변수가 아니라 `config.js` 상수다(PP-09). 배포마다 달라지는 값과 비밀값만 환경변수로 둔다. 구현된 상수: JWT `iss`·`aud` = `cal-todo`, `REFRESH_TTL_SEC`=14일, `REFRESH_FAMILY_MAX_DAYS`=30, `BCRYPT_ROUNDS`=10, 레이트 리밋 일반 60·로그인 10·refresh 30(분당), `JSON_BODY_LIMIT`=1mb, `LLM_TIMEOUT_MS`=90000, `LLM_DAILY_LIMIT` MAIN 20·LIGHT 50, `LLM_CONCURRENCY` MAIN 20·LIGHT 40, `LLM_QUEUE_MAX`=100, `LLM_QUEUE_WAIT_MS`=30000, `LLM_RETRY_AFTER_SEC`=10, `FORM_LIMITS`(productName 100, category 50, intro 10~1000, toneGuide 200), `REGEN_MAX`=3, `ASSET_MAX_COUNT`=10, `ASSET_MAX_BYTES`=10MB, `PREVIEW_IMAGE_WIDTH`=390, `ANALYZE_MAX`=3, `CRAWL_TIMEOUT_MS`=10000, `EDIT_TEXT_MAX`=2000. 이 중 `iss`·`aud`, `LLM_RETRY_AFTER_SEC`, category·toneGuide 상한, `EDIT_TEXT_MAX`는 문서에 근거가 없어 구현이 정한 값이다. LLM 호출은 재시도 없음(`maxRetries: 0`, 재시도는 호출자 몫).
+`iss`·`aud`, Pool `max=20`, 상한·동시성 수치(D-5·20·27~30, NFR-03~05)는 환경변수가 아니라 `config.js` 상수다(PP-09). 배포마다 달라지는 값과 비밀값만 환경변수로 둔다. 구현된 상수: `DB_POOL_MAX`=20, `DB_STATEMENT_TIMEOUT_MS`=5000, `RESERVATION_TTL_MIN`=5, JWT `iss`·`aud` = `cal-todo`, `REFRESH_TTL_SEC`=14일, `REFRESH_FAMILY_MAX_DAYS`=30, `BCRYPT_ROUNDS`=10, 레이트 리밋 일반 60·로그인 10·refresh 30(`RATE_LIMIT_WINDOW_MS`=60000, 분당), `JSON_BODY_LIMIT`=1mb, `HTML_ROOT_WIDTH_PX`=780, `LLM_TIMEOUT_MS`=90000, `LLM_DAILY_LIMIT` MAIN 20·LIGHT 50, `LLM_CONCURRENCY` MAIN 20·LIGHT 40, `LLM_QUEUE_MAX`=100, `LLM_QUEUE_WAIT_MS`=30000, `LLM_RETRY_AFTER_SEC`=10, `FORM_LIMITS`(productName 100, category 50, intro 10~1000, toneGuide 200), `REGEN_MAX`=3, `ASSET_MAX_COUNT`=10, `ASSET_MAX_BYTES`=10MB, `ASSET_MIME`(jpeg·png·webp), `PREVIEW_IMAGE_WIDTH`=390, `ANALYZE_MAX`=3, `CRAWL_TIMEOUT_MS`=10000, `EDIT_TEXT_MAX`=2000. 이 중 `iss`·`aud`, `LLM_RETRY_AFTER_SEC`, category·toneGuide 상한, `EDIT_TEXT_MAX`는 문서에 근거가 없어 구현이 정한 값이다. LLM 호출은 재시도 없음(`maxRetries: 0`, 재시도는 호출자 몫).
 
 ### 6.2 원칙
 
@@ -287,7 +290,7 @@ pages → components → hooks(TanStack Query) → api(client)
 | OP-01 | **설정 로딩은 `config.js` 한 곳.** `node --env-file=.env`로 읽고, 시작 시 필수 변수가 없거나 JWT 키가 32바이트 미만이면 즉시 종료한다. 다른 모듈은 `process.env`를 직접 읽지 않는다 | NFR-07 |
 | OP-02 | `.env`는 git에 넣지 않는다. 운영은 호스팅 시크릿으로 주입한다. `.env.example`에는 키 이름과 형식 예시만 | P-2, PRD 7.2 |
 | OP-03 | JWT: `algorithms: ['HS256']` 고정, `iss`·`aud`·`typ` 검사, 키는 용도별 분리. 클레임에 자격 정보(이메일 인증·잔액)를 넣지 않는다. refresh는 SHA-256 해시만 저장 | PRD 5.8, BR-06 |
-| OP-04 | 쿠키 `rt`: `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`. `/api/auth/refresh`·`/logout`은 `Origin === FRONTEND_ORIGIN`이 아니면 403. 프론트와 API는 **단일 도메인·동일 출처**(Express가 정적 파일과 `/api/*`를 함께 서빙, DEC-02)라 CORS를 쓰지 않고 Strict 쿠키가 그대로 전송된다(C-3). 개발 중에는 Vite `/api` 프록시로 같은 출처를 만든다 | NFR-09, FR-37 |
+| OP-04 | 쿠키 `rt`: `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`. `/api/auth/refresh`·`/logout`은 `Origin === FRONTEND_ORIGIN`이 아니면 403. 프론트와 API는 **단일 도메인·동일 출처**(Express가 정적 파일과 `/api/*`를 함께 서빙, DEC-02)라 운영에서는 CORS 없이 Strict 쿠키가 그대로 전송된다(C-3). 개발 중 Vite(5173)가 백엔드(3000)를 직접 호출할 수 있도록 `cors` 미들웨어가 `FRONTEND_ORIGIN` 하나만 허용한다(`*` 미허용) | NFR-09, FR-37 |
 | OP-05 | **입력 검증은 routes에서, 규칙 검증은 services에서.** routes는 타입·길이·형식(D-15 URL 패턴, D-18 폼, D-19 업로드)을 손으로 검사하고 400을 던진다. 상태·카운트·version 같은 규칙은 서비스·DB가 판정한다. `express.json({ limit: '1mb' })` | BR-20, BR-35, BR-36, BR-44 |
 | OP-06 | 업로드는 `multer` 메모리 저장소, **요청당 1장**, 10MB·MIME 제한, 프로젝트당 10장은 DB 개수로 검사. `sharp`로 실제 이미지인지 한 번 더 확인한다(C-6). 필드명 `file`, 성공 201 `{id}`. 업로드는 version을 올리지 않고 진행 중 작업과 무관하다 | FR-11, D-19 |
 | OP-07 | **LLM 출력은 저장 전에 반드시 `lib/html.js`로 정제**한다. 태그·속성 화이트리스트(허용 외 전부 제거), `style`·`src`(`asset:{uuid}`만, 그 외 `src`의 img는 제거. AC-BR50 근거로 draftHtml에 원본 URL·키를 넣지 않는다)·`alt`·`data-block-id`·`data-edit-id`만 허용, 누락된 `data-block-id`는 서버가 부여하고 편집 대상 텍스트 요소에는 블록 내 고유 `data-edit-id`를 부여(FR-17). 편집 적용·워터마크 삽입도 같은 모듈이 한다. 최종 HTML을 만들 때는 `data-edit-id`·`data-block-id`를 제거하고 `asset:{uuid}`를 `PUBLIC_IMAGE_BASE_URL/{assetId}.{ext}`로 바꾼다(FR-22). 프리뷰는 같은 참조를 390px 사본 data URI로 바꾼다 | FR-14, FR-16, FR-17, NFR-10 |
@@ -295,7 +298,7 @@ pages → components → hooks(TanStack Query) → api(client)
 | OP-09 | 타임아웃: pg `statement_timeout` 5초, LLM 90초(`AbortSignal.timeout`), 크롤링 fetch 10초. 호스팅·프록시 요청 타임아웃은 90초보다 길게 설정한다 | NFR-02, NFR-05 |
 | OP-10 | 마이그레이션: `backend/migrations/NNN_*.sql` 순수 SQL, 전진만(down 없음). 적용된 파일은 수정하지 않고 새 파일을 추가한다. `scripts/migrate.js`(pg만 사용)가 `schema_migrations` 테이블로 적용 여부를 기록하고 파일마다 TX로 실행한다 | PRD 9장, Prisma 금지 |
 | OP-11 | 배포: 단일 도메인·동일 출처. Express가 `frontend/dist`(정적 랜딩 + SPA, `/app/*` → `app/index.html` 폴백)를 서빙하고 `/api/*`를 처리하며, 앞단 Cloudflare 프록시가 CDN 캐시를 맡는다. 백엔드는 Docker 이미지 1개 + PM2 2프로세스(VM 2 vCPU / 4GB), 관리형 PG 17, 스토리지 Cloudflare R2. 서버리스·별도 정적 호스팅 금지(LLM 90초). 배포 순서는 마이그레이션 → 프론트 빌드 → 백엔드 | PRD 7.6, D-31 |
-| OP-12 | 헬스체크 `GET /healthz`: `SELECT 1` 성공 시 200 `{status:'ok'}`, 실패 시 503 `{status:'unavailable'}`. 인증·로그 없음. SIGTERM에서 `server.close()` → `pool.end()` | NFR-12 |
+| OP-12 | 헬스체크 `GET /healthz`: `SELECT 1` 성공 시 200 `{status:'ok'}`, 실패 시 503 `{status:'unavailable'}`. 인증·로그 없음. SIGTERM(Windows 개발은 SIGINT도)에서 `stopJobs()` → `server.close()` → `pool.end()` | NFR-12 |
 | OP-13 | 백업: 관리형 PG 자동 백업 일 1회·7일 보존을 켠다(직접 스크립트 없음). 원장 대사 쿼리(잔액 ≠ 원장 합계 건수)는 일 1회 job이 실행하고 불일치가 있으면 `level=error`로 남긴다 | NFR-13, NFR-14 |
 | OP-14 | 운영자 스크립트(`scripts/grant.js`)는 서비스 함수를 재사용하고 운영 DB에 직접 SQL을 치지 않는다 | FR-07, PRD-D-7 |
 
@@ -343,23 +346,23 @@ frontend/
 
 ```
 backend/
-├─ package.json         # "start": "node --env-file=.env src/server.js", "test": "node --test"
+├─ package.json         # scripts: start, dev(--watch), migrate, grant, test(`.env.test`로 migrate 후 `node --test --test-concurrency=1`), test:coverage
 ├─ .env.example         # 6.1절 키 목록
 ├─ Dockerfile           # 이미지 1개, PM2 2프로세스(PRD 7.6)
 ├─ src/
 │  ├─ server.js         # listen, jobs 시작, SIGTERM 종료 처리
-│  ├─ app.js            # 미들웨어·라우터 조립, frontend/dist 정적 서빙·SPA 폴백(LY-05). 테스트가 import
+│  ├─ app.js            # 미들웨어·라우터 조립, 개발용 /api-docs(LY-05). frontend/dist 정적 서빙·SPA 폴백은 OPS-01에서 추가. 테스트가 import
 │  ├─ config.js         # 환경변수 로딩·검증, D 수치 상수(PP-09)
 │  ├─ db.js             # pg Pool(max 20, statement_timeout 5s), query, withTx
-│  ├─ middleware/       # request-log, rate-limit, require-auth, error-handler
-│  ├─ routes/           # auth, me, projects(생성·목록·assets·usps), analyze, generate, edit, publish(final·extension-token·publish-report)
+│  ├─ middleware/       # cors, request-log, rate-limit, require-auth, error-handler
+│  ├─ routes/           # auth, me, projects(생성·목록·상세·form·assets·usps·preview), analyze, generate, edit, publish(publish·final. extension-token·publish-report는 BE-20)
 │  ├─ services/         # routes와 같은 이름: auth(토큰 발급·회전), credits(지갑·원장·지급), eligibility(assertEligible), projects, analyze, generate, edit, publish, preview
 │  ├─ llm/index.js      # callRole, Role 매핑, 세마포어·대기열, 일일 상한, 사용량 로그, mock provider
-│  ├─ lib/              # html.js(정제·블록 편집·워터마크), storage.js(S3), crawler.js(휘발성), errors.js(AppError)
+│  ├─ lib/              # html.js(정제·블록 편집·워터마크), storage.js(S3·로컬), crawler.js(휘발성), errors.js(AppError), validate.js(version 검사)
 │  └─ jobs/index.js     # setInterval: 선점 만료 복원(1분), refresh 만료 삭제·원장 대사(1일)
 ├─ migrations/          # 001_init.sql …
 ├─ scripts/             # grant.js(FR-07), migrate.js(OP-10)
-└─ test/                # *.test.js(기능별: auth, eligibility, publish, reservation, preview-leak, html), load/*.js(k6)
+└─ test/                # *.test.js(기능별: auth, refresh, eligibility, publish, reservation, preview, html, e2e(유출 검사) 등), helpers.js, load/*.js(k6, OPS-02)
 ```
 (S) 추가 예정: `routes/billing.js`·`services/billing.js`(FR-08), Passport 설정(`services/auth.js` 안), `extension_tokens`·AI 수정 마이그레이션.
 
@@ -403,7 +406,7 @@ extension/
 |---|---|---|---|
 | C-1 | 프리뷰 이미지 전달 | 해소(DEC-01, data URI 인라인). 서버가 비공개 버킷의 390px 워터마크 사본을 읽어 `data:image/webp;base64,...`로 프리뷰 HTML에 넣는다. 이유: sandbox iframe은 인증 헤더를 못 보내고, 서명 URL은 비공개 버킷 URL을 응답에 노출해 PP-05 유출 검사 대상이 된다. 단기 서명 URL은 쓰지 않는다 | FR-16, BR-50, 도메인 6장 데이터 소유 표, D-21, ERD E-8 |
 | C-2 | 오류 코드 체계 | 해소(DEC-09, 4.2절 코드 전부 채택, 502 `UPSTREAM_FAILED` 포함). 판정 우선순위는 4.2절. 프론트의 `TOKEN_INVALID`는 갱신 시도 없이 인증 상태를 비우고 로그인 화면으로 보낸다 | I-4, I-7 |
-| C-3 | 프론트·API 도메인 배치 | 해소(DEC-02, 단일 도메인·동일 출처). Express가 `frontend/dist`를 서빙하고 `/api/*`를 처리하며 앞단에 Cloudflare 프록시를 둔다. CORS가 필요 없고 `SameSite=Strict` 쿠키가 그대로 전송된다. 별도 정적 호스팅은 쓰지 않는다 | PRD-D-2, D-31, NFR-09 |
+| C-3 | 프론트·API 도메인 배치 | 해소(DEC-02, 단일 도메인·동일 출처). Express가 `frontend/dist`를 서빙하고 `/api/*`를 처리하며 앞단에 Cloudflare 프록시를 둔다. 운영에서는 CORS가 필요 없고 `SameSite=Strict` 쿠키가 그대로 전송된다(개발용 CORS는 `FRONTEND_ORIGIN` 하나만 허용). 별도 정적 호스팅은 쓰지 않는다 | PRD-D-2, D-31, NFR-09 |
 | C-4 | 신규 라이브러리 승인 | 해소(DEC-03, 6개 모두 승인): `multer`, `@aws-sdk/client-s3`, `cheerio`, `express-rate-limit`, `react-router`, `prettier`(개발용). 이유는 3.5절 | LY-17 |
 | C-5 | `requireEligible`과 PUBLISHED 재요청 | 해소(도메인 v0.3.3 BR-10, PRD v0.3.2 FR-06): PUBLISHED 대상 요청은 자격 검사 전에 처리한다. 퍼블리시는 서비스 TX 안에서 PUBLISHED 확인 뒤 자격을 확인하고, PUBLISHED 편집은 409(LY-06). 이후 프로젝트 대상 API 전체를 서비스 안 판정으로 통일 | I-1, FR-06, FR-34 |
 | C-6 | 업로드 요청당 1장 | 해소(구현): `POST /assets`는 multipart 필드 `file` 1장씩(multer `files: 1`), 성공 201 `{id}`. 메모리 상한(요청당 10MB)을 위한 제안이었고 PRD는 "최대 10장"만 정하고 요청 단위는 정하지 않았다 | FR-11, D-19 |

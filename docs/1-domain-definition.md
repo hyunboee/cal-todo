@@ -1,4 +1,4 @@
-# Coupang AI Detail Maker - 도메인 정의서 (v0.3.10 초안)
+# Coupang AI Detail Maker - 도메인 정의서 (v0.3.13 초안)
 
 > 범위: 핵심 비즈니스 규칙과 도메인 간 데이터 흐름. 구현 메커니즘은 파이프라인 원칙(P-ID)에 요약만 두고 상세는 PRD(`docs/2-PRD.md`)의 기술 아키텍처를 따른다. MVP 범위, 우선순위, 일정은 PRD가 관리한다.
 
@@ -8,6 +8,9 @@
 
 | 버전 | 일자 | 변경자 | 변경내용 |
 |---|---|---|---|
+| v0.3.13 | 2026-10-01 | hyunboee (Claude 작성) | 의존 예외(require-auth)·일일 상한 안내 방식 정리: 기준 PRD 버전 갱신만(규칙 변경 없음, 바뀐 ID 없음). 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.12 |
+| v0.3.12 | 2026-10-01 | hyunboee (Claude 작성) | 백엔드 구현 기준 최신화: 기준 PRD 버전 갱신만(규칙 변경 없음). 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.11 |
+| v0.3.11 | 2026-10-01 | hyunboee (Claude 작성) | 개발용 CORS·Swagger UI 반영: D-31(운영은 CORS 없음, 개발용 CORS는 `FRONTEND_ORIGIN` 하나만 허용), 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.10 |
 | v0.3.10 | 2026-10-01 | hyunboee (Claude 작성) | 백엔드 구현 [가정] 반영: 기준 PRD 버전 갱신만(규칙 변경 없음). 9장 머리말의 PRD 참조 버전. 구현에서 나온 한계는 PRD 11.1 PRD-R-12~14에 기록. 기준 PRD 버전: v0.3.9 |
 | v0.3.9 | 2026-09-30 | hyunboee (Claude 작성) | DB-01~03 구현 후속 정합화: AC-BR63, AC-BR71(비밀값 스캔 패턴 `DATABASE_URL` → `postgresql://`), 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.8 |
 | v0.3.8 | 2026-09-30 | hyunboee (Claude 작성) | 권장안 반영: 자격 검사 서비스 내 판정, 퍼블리시 TX 잔액 선검사, PG Should 근거. P-3, 6장 시퀀스 참가자 API, 7장 다이어그램(DG-3)의 자격 미들웨어 노드, 9장 머리말의 PRD 참조 버전. 기준 PRD 버전: v0.3.7 |
@@ -587,7 +590,7 @@ flowchart LR
 
 ## 9. 결정 로그 (D)
 
-> 상태: `미결` 결정 전 / `가정` 기본값을 적용 중이며 뒤집을 수 있음 / `확정` 합의 완료 / `폐기`. 담당은 모두 hyunboee(1인 개발). 관련 열의 PRD ID는 PRD v0.3.9 항목이다.
+> 상태: `미결` 결정 전 / `가정` 기본값을 적용 중이며 뒤집을 수 있음 / `확정` 합의 완료 / `폐기`. 담당은 모두 hyunboee(1인 개발). 관련 열의 PRD ID는 PRD v0.3.12 항목이다.
 
 | ID | 항목 | 선택지 | 결과(현재) | 상태 | 담당 | 기한 | 관련 |
 |---|---|---|---|---|---|---|---|
@@ -621,7 +624,7 @@ flowchart LR
 | D-28 | 계정 일일 LLM 상한 | 없음 / Role별 N회 | 사용자당 1일 MAIN 20회, LIGHT 50회(실패 포함). "1일"은 Asia/Seoul 자정 기준(확정, 2026-09-30 Claude 위임 결정: "오늘 N회, 내일 0시 초기화"로 설명하기 쉬움) | 가정(기준 시각은 확정) | hyunboee | 베타 원가 측정 후 | BR-75, R-6, PRD FR-29, PRD-D-5 |
 | D-29 | LLM 동시성·과부하 한도 | - | 프로세스별 동시 MAIN 20, LIGHT 40, 대기열 100건, 최대 대기 30초, 초과 시 503 + Retry-After. 동시 접속 1,000명 기준 | 가정 | hyunboee | 부하 테스트 후 | BR-76, R-8, PRD NFR-03, PRD-R-3, PRD-R-4 |
 | D-30 | 선점 만료 시간 | - | 5분 | 가정 | hyunboee | 생성 개발 전 | BR-47, R-10, PRD-R-10 |
-| D-31 | 배포·호스팅 | v0.2: Vercel | 단일 도메인·동일 출처: Express가 `frontend/dist`(정적 랜딩 + SPA)를 서빙하고 `/api/*`를 처리, 앞단 Cloudflare 프록시(무료 CDN 캐시). 백엔드는 VM 또는 PaaS 상시 프로세스(짧은 타임아웃의 서버리스 회피), 관리형 PostgreSQL 17, 스토리지는 Cloudflare R2(S3 호환, 비공개·공개 버킷 분리). 확정(2026-09-30 Claude 위임 결정): 같은 출처라 CORS 불필요·SameSite=Strict 쿠키 동작, 이그레스 무료 | 확정 | hyunboee | 배포 전 | P-1, P-7, PRD-D-2, PRD-D-3 |
+| D-31 | 배포·호스팅 | v0.2: Vercel | 단일 도메인·동일 출처: Express가 `frontend/dist`(정적 랜딩 + SPA)를 서빙하고 `/api/*`를 처리, 앞단 Cloudflare 프록시(무료 CDN 캐시). 백엔드는 VM 또는 PaaS 상시 프로세스(짧은 타임아웃의 서버리스 회피), 관리형 PostgreSQL 17, 스토리지는 Cloudflare R2(S3 호환, 비공개·공개 버킷 분리). 확정(2026-09-30 Claude 위임 결정): 운영은 같은 출처라 CORS 없이 SameSite=Strict 쿠키 동작(개발용 CORS는 `FRONTEND_ORIGIN` 하나만 허용), 이그레스 무료 | 확정 | hyunboee | 배포 전 | P-1, P-7, PRD-D-2, PRD-D-3 |
 | D-32 | 환불 정책 | 불가 / 미사용 크레딧 환불 / 기간 한정 | 미정 | 미결 | hyunboee | 유료 출시 전 | BR-16 |
 | D-33 | 대상 사용자·플랫폼 | - | 학생·20~50대 직장인 셀러(지침과 원문 조화). 웹 우선 + 반응형, WING 주입은 데스크톱 Chrome만 | 가정 | hyunboee | 베타 후 | REQ-21, REQ-23, BR-65 |
 | D-34 | 구독 PAST_DUE 유예 기간 | PG 재시도 기간 / N일 | PG 재시도 정책에 맞춘다(D-3 결정 시 확정) | 미결 | hyunboee | 구독 도입 전 | BR-18 |
