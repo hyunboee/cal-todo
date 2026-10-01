@@ -1,6 +1,10 @@
 import { useAuthStore } from '../stores/auth.ts'
 import { queryClient } from '../queryClient.ts'
 
+// 백엔드 API 경로(끝 / 없이)는 빌드 시 VITE_API_BASE_URL로 정한다. 예: https://api.example.com/api
+// 없으면(node 테스트 등) 같은 출처의 /api
+const API_BASE: string = import.meta.env?.VITE_API_BASE_URL ?? '/api'
+
 export class ApiError extends Error {
   status: number
   code: string
@@ -47,7 +51,7 @@ let refreshing: Promise<boolean> | null = null
 
 async function doRefresh(): Promise<boolean> {
   try {
-    const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin' })
+    const res = await fetch(API_BASE + '/auth/refresh', { method: 'POST', credentials: 'include' })
     if (!res.ok) {
       logError('[api] refresh', res.status)
       return false
@@ -80,7 +84,7 @@ async function send(path: string, opts: RequestOptions, token: string | null): P
     body = opts.form
   }
   try {
-    return await fetch('/api' + path, { method, headers, body, credentials: 'same-origin' })
+    return await fetch(API_BASE + path, { method, headers, body, credentials: 'include' })
   } catch {
     logError('[api]', method, path, 0, 'NETWORK_ERROR')
     throw new ApiError(0, 'NETWORK_ERROR', undefined, undefined, opts.projectId)

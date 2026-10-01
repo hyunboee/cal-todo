@@ -3,12 +3,12 @@ import cookieParser from 'cookie-parser'
 import { AppError } from '../lib/errors.js'
 import { loginLimiter, refreshLimiter } from '../middleware/rate-limit.js'
 import { signup, login, refresh, logout } from '../services/auth.js'
-import { FRONTEND_ORIGIN, REFRESH_TTL_SEC } from '../config.js'
+import { FRONTEND_ORIGIN, REFRESH_TTL_SEC, COOKIE_SAMESITE } from '../config.js'
 
 export const authRouter = express.Router()
 authRouter.use(cookieParser())
 
-const COOKIE = { httpOnly: true, secure: true, sameSite: 'strict', path: '/api/auth' }
+const COOKIE = { httpOnly: true, secure: true, sameSite: COOKIE_SAMESITE, path: '/api/auth' }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // FR-37·FR-39(PRD 5.8, NFR-09): 쿠키 요청은 Origin이 프론트엔드와 같아야 한다(헤더 없음 포함 거부)

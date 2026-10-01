@@ -42,6 +42,9 @@ const devDefault = (key, fallback) => {
 }
 
 export const FRONTEND_ORIGIN = devDefault('FRONTEND_ORIGIN', 'http://localhost:5173')
+// rt 쿠키 SameSite. 프론트·API가 같은 상위 도메인이면 strict, 서로 다른 도메인이면 none(Secure는 항상)
+export const COOKIE_SAMESITE = process.env.COOKIE_SAMESITE || 'strict'
+if (!['strict', 'none'].includes(COOKIE_SAMESITE)) throw new Error('COOKIE_SAMESITE must be strict or none')
 export const JWT_ACCESS_TTL_SEC = positiveInt('JWT_ACCESS_TTL_SEC', 900) // PRD 5.8
 
 const trustProxy = process.env.TRUST_PROXY ?? '0'
@@ -72,8 +75,6 @@ export const S3_SECRET_ACCESS_KEY = s3Var('S3_SECRET_ACCESS_KEY')
 export const S3_PRIVATE_BUCKET = s3Var('S3_PRIVATE_BUCKET')
 export const S3_PUBLIC_BUCKET = s3Var('S3_PUBLIC_BUCKET')
 export const STORAGE_LOCAL_DIR = resolve(process.env.STORAGE_LOCAL_DIR || '.storage')
-// OP-11: 정적 랜딩 + SPA 빌드 결과(없으면 서빙하지 않음). 기본은 backend 기준 ../frontend/dist
-export const FRONTEND_DIST = resolve(process.env.FRONTEND_DIST || '../frontend/dist')
 export const PUBLIC_IMAGE_BASE_URL = devDefault('PUBLIC_IMAGE_BASE_URL', 'http://localhost:3000/public-images').replace(/\/+$/, '')
 
 // PP-09 상수

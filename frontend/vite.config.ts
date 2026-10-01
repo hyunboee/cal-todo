@@ -18,7 +18,6 @@ const appFallback = (): Plugin => ({
 
 export default defineConfig({
   plugins: [react(), appFallback()],
-  server: { proxy: { '/api': 'http://localhost:3000' } },
   build: {
     rolldownOptions: {
       input: {

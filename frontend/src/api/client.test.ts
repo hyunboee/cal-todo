@@ -70,12 +70,12 @@ describe('ApiError', () => {
 })
 
 describe('request: 요청 구성', () => {
-  it('GET → /api 접두, same-origin, 토큰 없으면 Authorization 없음', async () => {
+  it('GET → /api 접두, credentials include, 토큰 없으면 Authorization 없음', async () => {
     mockFetch(() => json({ email: 'a@b.c' }))
     assert.deepEqual(await request('/me'), { email: 'a@b.c' })
     assert.equal(calls.length, 1)
     assert.equal(calls[0].url, '/api/me')
-    assert.equal(calls[0].init.credentials, 'same-origin')
+    assert.equal(calls[0].init.credentials, 'include')
     assert.equal(calls[0].init.method ?? 'GET', 'GET')
     assert.equal(header(calls[0], 'Authorization'), null)
   })
@@ -249,7 +249,7 @@ describe('request: 401 처리', () => {
 })
 
 describe('refreshAccessToken', () => {
-  it('POST /api/auth/refresh, same-origin. 동시 호출은 fetch 1회 공유, 끝나면 새 fetch', async () => {
+  it('POST /api/auth/refresh, credentials include. 동시 호출은 fetch 1회 공유, 끝나면 새 fetch', async () => {
     const gate = deferred<Response>()
     mockFetch(() => gate.promise)
     const a = refreshAccessToken()
@@ -260,7 +260,7 @@ describe('refreshAccessToken', () => {
     assert.equal(calls.length, 1)
     assert.equal(calls[0].url, '/api/auth/refresh')
     assert.equal(calls[0].init.method, 'POST')
-    assert.equal(calls[0].init.credentials, 'same-origin')
+    assert.equal(calls[0].init.credentials, 'include')
     assert.equal(useAuthStore.getState().accessToken, 'r1')
 
     mockFetch(() => json({ accessToken: 'r2', expiresIn: 900 }))

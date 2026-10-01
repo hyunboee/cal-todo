@@ -1,6 +1,4 @@
 import { fileURLToPath } from 'node:url'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import express from 'express'
 import { query } from './db.js'
 import { notFound, errorHandler } from './middleware/error-handler.js'
@@ -16,7 +14,7 @@ import { publishRouter } from './routes/publish.js'
 import { editRouter } from './routes/edit.js'
 import { analyzeRouter } from './routes/analyze.js'
 import { AppError } from './lib/errors.js'
-import { TRUST_PROXY, JSON_BODY_LIMIT, NODE_ENV, FRONTEND_DIST } from './config.js'
+import { TRUST_PROXY, JSON_BODY_LIMIT, NODE_ENV } from './config.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const SWAGGER_FILE = new URL('../swagger.yaml', import.meta.url)
@@ -60,13 +58,6 @@ export function createApp() {
   // [가정] 일반 리밋은 사용자당이라 requireAuth 뒤(LY-05 순서와 다름)
   app.use('/api', requireAuth, generalLimiter)
   app.use('/api', meRouter, projectsRouter, generateRouter, publishRouter, editRouter, analyzeRouter)
-
-  // OP-11, DEC-02: /api 밖은 frontend/dist(랜딩 + SPA). dist가 없으면(개발·테스트) 등록하지 않는다.
-  if (existsSync(FRONTEND_DIST)) {
-    app.get('/app{/*splat}', (req, res) => res.sendFile(join(FRONTEND_DIST, 'app', 'index.html')))
-    app.use('/assets', express.static(join(FRONTEND_DIST, 'assets'), { immutable: true, maxAge: '1y' })) // 해시 파일명
-    app.use(express.static(FRONTEND_DIST))
-  }
 
   app.use(notFound)
   app.use(errorHandler)
