@@ -18,6 +18,7 @@
 | [docs/6-arch-diagram.md](docs/6-arch-diagram.md) | 기술 아키텍처 다이어그램: 전체 구성도와 복잡 로직(퍼블리시 TX, JWT 회전, 상태 전이, LLM 작업 처리, 콘텐츠 보호) Mermaid 다이어그램 |
 | [docs/7-erd.md](docs/7-erd.md) | ERD: MVP·S/W 단계 테이블 관계도, 테이블 정의, 제약·인덱스, 상태·열거 값, 문서 대조 결과 |
 | [docs/8-plan.md](docs/8-plan.md) | 실행 계획(WBS): DB·BE·FE Task 분해(수행 작업, 체크박스 완료 조건, 선행 Task), 결정 Task(DEC), P1(2일 핵심 슬라이스)·P2(MVP 완성) 일정과 마일스톤 |
+| [docs/9-style-guide.md](docs/9-style-guide.md) | 스타일 가이드: WF-01 시안(TEST_IMAGES/wf-01-landing.svg) 기반 다크 테마 컬러·타이포·간격·반경 토큰, 컴포넌트 스펙, 화면 적용 매핑, `:root` CSS 변수 |
 | [backend/swagger.yaml](backend/swagger.yaml) | API 명세(OpenAPI 3.0.3): PRD 8장 엔드포인트 27개, 인증 스킴(Access Token·확장 토큰·Refresh 쿠키), 요청·응답 스키마, 공통 오류 응답 |
 
 # 코딩 행동 지침

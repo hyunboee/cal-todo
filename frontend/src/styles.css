@@ -1,0 +1,69 @@
+:root {
+  /* 배경·테두리 */
+  --color-bg-page: #07080c;
+  --color-bg-iconbar: #0b0d12;
+  --color-bg-code: #0a0b10;
+  --color-bg-frame: #0e1016;
+  --color-bg-block: #0f1118;
+  --color-bg-chip: #11131c;
+  --color-bg-toolbar: #12141c;
+  --color-bg-panel: #12141d;
+  --color-bg-tile: #141726;
+  --color-bg-input: #161925;
+  --color-bg-control: #1b1e2a;
+  --color-border-subtle: #1c1f2b;
+  --color-border: #1f2230;
+  --color-border-chip: #23263a;
+  --color-border-panel: #262a3b;
+  --color-border-check: #4a4e63;
+  /* 텍스트 */
+  --color-text-strong: #ffffff;
+  --color-text: #d7d9e3;
+  --color-text-secondary: #b9bccb;
+  --color-text-muted: #8a8ea3;
+  --color-text-subtle: #6d7185;
+  --color-text-disabled: #4d5166; /* 주석 전용 */
+  --color-icon: #5c6075;
+  /* 브랜드 블루 */
+  --color-brand: #4353ff;
+  --color-brand-alt: #5247ff;
+  --color-brand-hover: #5566ff;   /* 가정 */
+  --color-brand-active: #3544e6;  /* 가정 */
+  --color-accent: #4f63ff;
+  --color-accent-light: #6f7dff;
+  --color-accent-lighter: #8f9bff;
+  --color-badge-text: #9fa8ff;
+  --color-badge-bg: #1a1f4d;
+  --color-badge-bg-light: #1d2140;
+  /* 그라데이션·워터마크 */
+  --gradient-glow: radial-gradient(circle at 72% 42%, rgba(42,60,255,.55), rgba(42,60,255,0) 45%);
+  --gradient-canvas: linear-gradient(135deg, #0b1030, #1a2a8a);
+  --color-canvas-orb: rgba(51,70,255,.35);
+  --color-watermark: rgba(255,255,255,.08);
+  --color-watermark-strong: rgba(255,255,255,.18);
+  /* 코드 */
+  --color-code-tag: #e0a86a;
+  --color-code-attr: #7fb0ff;
+  --color-code-string: #9fd48a;
+  --color-code-text: #d7d9e3;
+  --color-code-comment: #4d5166;
+  /* 상태색 (가정) */
+  --color-error: #ff6b6b;   --color-error-bg: #2a1418;
+  --color-warn: #f5b14c;    --color-warn-bg: #2a2214;
+  --color-success: #4ade80; --color-success-bg: #11251a;
+  --color-info: #8f9bff;    --color-info-bg: #1a1f4d;
+  --color-focus: #6f7dff;
+  /* 타이포 */
+  --font-sans: Pretendard, 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  --font-mono: Consolas, 'D2Coding', monospace;
+  --fs-display: 66px; --fs-title: 19px; --fs-body-lg: 18px; --fs-btn-lg: 16px;
+  --fs-md: 15px; --fs-step: 14px; --fs-sm: 13px; --fs-xs: 12px;
+  --fs-caption: 11px; --fs-micro: 10px; --fs-badge: 9px;
+  /* 간격 */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px;
+  /* 반경 */
+  --radius-xs: 3px; --radius-sm: 4px; --radius-md: 6px;
+  --radius-lg: 8px; --radius-xl: 10px; --radius-pill: 999px;
+}
+body { background: var(--color-bg-page); color: var(--color-text); font-family: var(--font-sans); }

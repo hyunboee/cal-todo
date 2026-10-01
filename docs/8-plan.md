@@ -1,11 +1,11 @@
-# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.20 초안)
+# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.21 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 작업 실행 계획(WBS) |
-| 버전 | v0.1.20 (초안) |
+| 버전 | v0.1.21 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
 | 기준 문서 버전 | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
@@ -18,6 +18,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.21 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-01a·FE-01b 완료 조건 체크(7개, `[x]` 143개). `tsc --noEmit` 통과, `npm run build` → `dist/index.html`·`dist/app/index.html`(noindex), 개발 서버 `/api` 프록시 401 전달 확인. 순수 TS 모듈(stores, queryClient)은 `node --test` 18/18, 라인 커버리지 100%(새 의존성 없음, QA-05 외 추가) |
 | v0.1.20 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리(체크박스 변경 없음, `[x]` 136개 유지): 3장 DEC-10, BE-08b(429 초기화 시각 문구) |
 | v0.1.19 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.12, PRD v0.3.11, 시나리오 v0.1.10, 와이어프레임 v0.1.10, 구조 원칙 v0.1.12, 아키텍처 v0.1.12, ERD v0.1.12 | 백엔드 구현 기준 최신화(체크박스 변경 없음, `[x]` 136개 유지): DB-03(주기 작업 시작 시 즉시 1회 실행·간격 기준) |
 | v0.1.18 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.11, PRD v0.3.10, 시나리오 v0.1.9, 와이어프레임 v0.1.9, 구조 원칙 v0.1.11, 아키텍처 v0.1.11, ERD v0.1.11 | 개발용 CORS·Swagger UI 반영(체크박스 변경 없음): 3장 DEC-02 결정 서술, BE-01a(수행 작업·CORS 완료 조건 문구, 새 Task 없음), OPS-01 확인 항목의 CORS 문구 |
@@ -135,8 +136,8 @@ P1 Task는 P1 Task만 선행으로 둔다(P2 역의존 없음). P2 Task의 선�
 | BE-14a | 퍼블리시 TX·최종 HTML | BE | M | P1 | BE-09a | 2일 차 오전 | 2.5h | [x] |
 | BE-14b | 공개 이미지 사본 | BE | M | P2 | BE-14a, BE-06, BE-07b | P2 2일 차 | 1h | [x] |
 | BE-15 | 콘텐츠 유출·자격 통합 테스트 | BE | M | P2 | BE-11, BE-12, BE-13, BE-14b | P2 4일 차 | 1h | [x] |
-| FE-01a | 프론트 골격(SPA, 라우터, Query, 인증 스토어) | FE | M | P1 | DEC-03(결정됨) | 2일 차 오전 | 0.5h | [ ] |
-| FE-01b | 멀티 페이지·noindex·Query 공통 처리 | FE | M | P2 | FE-01a | P2 2일 차 | 0.5h | [ ] |
+| FE-01a | 프론트 골격(SPA, 라우터, Query, 인증 스토어) | FE | M | P1 | DEC-03(결정됨) | 2일 차 오전 | 0.5h | [x] |
+| FE-01b | 멀티 페이지·noindex·Query 공통 처리 | FE | M | P2 | FE-01a | P2 2일 차 | 0.5h | [x] |
 | FE-02a | API client | FE | M | P1 | FE-01a | 2일 차 오전 | 0.5h | [ ] |
 | FE-02b | 인증 갱신 흐름 | FE | M | P2 | FE-02a, BE-04(통합 확인) | P2 2일 차 | 1h | [ ] |
 | FE-03a | WF-02 로그인·가입 | FE | M | P1 | FE-02a, BE-03a | 2일 차 오전 | 0.5h | [ ] |
@@ -715,10 +716,10 @@ flowchart LR
   - `react-router`로 `/app/login`, `/app`, `/app/projects/new`, `/app/projects/:id/analyze|edit|final`(N-2 제안 경로). P1은 `/app`에서 새 프로젝트 폼으로 보낸다(목록은 FE-04b).
   - QueryClient, `stores/auth.ts`(accessToken, 메모리만).
 - 완료 조건:
-  - [ ] `npm run build` → `dist/app/index.html` 생성
-  - [ ] 개발 서버에서 `/api` 요청이 백엔드로 전달됨
-  - [ ] `localStorage`·`sessionStorage` 사용 0건(grep, LY-11)
-  - [ ] `tsc --noEmit` 통과
+  - [x] `npm run build` → `dist/app/index.html` 생성
+  - [x] 개발 서버에서 `/api` 요청이 백엔드로 전달됨
+  - [x] `localStorage`·`sessionStorage` 사용 0건(grep, LY-11)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-01b 멀티 페이지·noindex·Query 공통 처리
 - 우선순위: M · 단계: P2 · 추정: 0.5h · 구간: P2 2일 차 (FE-01 1h 중 0.5h)
@@ -728,9 +729,9 @@ flowchart LR
   - 멀티 페이지 입력(`index.html` 랜딩 추가), `app/index.html`에 noindex.
   - QueryClient 공통 처리(503 `Retry-After` 재시도, 409 프로젝트 쿼리 무효화, LY-10). `stores/ui.ts`. `styles.css`.
 - 완료 조건:
-  - [ ] `npm run build` → `dist/index.html`, `dist/app/index.html` 생성
-  - [ ] `dist/app/index.html`에 `noindex` 메타(FR-32)
-  - [ ] `tsc --noEmit` 통과
+  - [x] `npm run build` → `dist/index.html`, `dist/app/index.html` 생성
+  - [x] `dist/app/index.html`에 `noindex` 메타(FR-32)
+  - [x] `tsc --noEmit` 통과
 
 #### FE-02a API client
 - 우선순위: M · 단계: P1 · 추정: 0.5h · 구간: 2일 차 오전 (FE-02 1.5h 중 0.5h)
