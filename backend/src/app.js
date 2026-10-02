@@ -91,3 +91,6 @@ export function createApp() {
   app.use(errorHandler)
   return app
 }
+
+// Vercel(서버리스) 엔트리: Vercel은 src/app.js를 고르고 default export(Express 앱)를 쓴다. 로컬·Docker는 src/server.js
+export default createApp()

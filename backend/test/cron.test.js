@@ -27,8 +27,8 @@ test('Vercel Cron: GET /api/internal/jobs는 Bearer CRON_SECRET만 허용하고 
   assert.equal(row.active_job_type, null)
 })
 
-test('Vercel 엔트리(index.js)는 Express 앱을 default export한다', async () => {
-  const app = (await import('../index.js')).default
+test('Vercel 엔트리(src/app.js)는 Express 앱을 default export한다', async () => {
+  const app = (await import('../src/app.js')).default
   assert.equal(typeof app, 'function')
   assert.equal(typeof app.listen, 'function')
 })
