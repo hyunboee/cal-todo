@@ -3,6 +3,9 @@ import type { Me, Project, ProjectForm } from './api/types.ts'
 export const REGEN_MAX = 3 // D-5
 export const FORM_MAX = { productName: 100, category: 50, intro: 1000, toneGuide: 200 } as const // backend config.js FORM_LIMITS와 동일
 export const INTRO_MIN = 10
+export const AI_IMAGE_MAX = 10 // backend config.js AI_IMAGE_MAX와 동일
+export const BLOCK_REGEN_MAX = 10 // backend config.js BLOCK_REGEN_MAX와 동일
+export const ASSET_MAX = 10 // backend config.js ASSET_MAX_COUNT와 동일
 
 export function projectPath(p: Pick<Project, 'id' | 'status'>): string {
   const base = `/app/projects/${p.id}`
@@ -15,14 +18,14 @@ export function isEligible(me: Me | undefined): boolean {
   return !!me && me.emailVerified && me.balance > 0
 }
 
-export type EditorFlags = { generate: boolean; regenerate: boolean; save: boolean; publish: boolean }
+export type EditorFlags = { generate: boolean; regenerate: boolean; blockRegen: boolean; save: boolean; image: boolean; aiImage: boolean; publish: boolean }
 
 export function editorFlags(p: Project, me: Me | undefined, pending: boolean): EditorFlags {
   const ok = isEligible(me) && !pending && p.activeJobType === null
-  const none = { generate: false, regenerate: false, save: false, publish: false }
+  const none = { generate: false, regenerate: false, blockRegen: false, save: false, image: false, aiImage: false, publish: false }
   if (p.status === 'DRAFT' || p.status === 'ANALYZED') return { ...none, generate: ok }
   if (p.status === 'GENERATED' || p.status === 'EDITING') {
-    return { generate: false, regenerate: ok && p.regenCount < REGEN_MAX, save: ok, publish: ok }
+    return { generate: false, regenerate: ok && p.regenCount < REGEN_MAX, blockRegen: ok && p.blockRegenCount < BLOCK_REGEN_MAX, save: ok, image: ok, aiImage: ok && p.aiImageCount < AI_IMAGE_MAX, publish: ok }
   }
   return none
 }

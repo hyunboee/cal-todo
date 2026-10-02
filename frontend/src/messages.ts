@@ -10,6 +10,8 @@ const MESSAGES: Record<string, string> = {
   INVALID_STATE: REFRESHED,
   JOB_IN_PROGRESS: REFRESHED,
   REGEN_LIMIT: '재생성 횟수를 모두 사용했습니다',
+  AI_IMAGE_LIMIT: 'AI 변환 횟수를 모두 사용했습니다',
+  BLOCK_REGEN_LIMIT: '슬라이드 재생성 횟수를 모두 사용했습니다',
   ANALYZE_LIMIT: '분석 횟수를 모두 사용했습니다',
   AI_EDIT_LIMIT: 'AI 수정 횟수를 모두 사용했습니다',
   RATE_LIMITED: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요',

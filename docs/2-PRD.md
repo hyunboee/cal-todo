@@ -1,11 +1,11 @@
-# Coupang AI Detail Maker - PRD (v0.3.12 초안)
+# Coupang AI Detail Maker - PRD (v0.3.13 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 제품 요구사항 정의서(PRD) |
-| 버전 | v0.3.12 (초안) |
+| 버전 | v0.3.13 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
 | 기준 도메인 정의서 버전 | v0.3.13 |
@@ -23,6 +23,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.3.13 | 2026-10-02 | hyunboee (Claude 작성) | v0.3.13 | 화면 직접 편집: FR-17(프리뷰 iframe 안 클릭 편집, 편집 대상에 문장 안 서식·줄바꿈 포함, 떠 있는 글자 span 감싸기) |
 | v0.3.12 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.13 | 의존 예외(require-auth)·일일 상한 안내 방식 정리: FR-29(429 초기화 시각은 프론트 고정 문구로 안내, DEC-10), 7.2 표 머리말의 도메인 버전 |
 | v0.3.11 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.12 | 백엔드 구현 기준 최신화: 7.2 표(Routes에 `me`, `requireAuth` 구현 범위, 머리말의 도메인 버전), 8장(표의 미구현 S 경로 표시, 구현 확정 응답 문단에 응답 형태·400 판정 시점). 규칙 변경 없음 |
 | v0.3.10 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.11 | 개발용 CORS·Swagger UI 반영: NFR-09, 7.2 표 머리말의 도메인 버전, 8장(개발용 경로 문단), 11.2 PRD-D-2(7.1·7.6 본문은 변경 없음) |
@@ -158,7 +159,7 @@ M은 P1(2일 핵심 슬라이스)과 P2(MVP 완성)로 나눠 진행한다(`docs
 | FR-14 | M | MAIN 모델로 상세페이지 생성. 폼 필수값 검증. 출력은 루트 폭 780px, **인라인 CSS 전용**(class 스타일 의존 금지), `<script>`·`<link>`·`<style>` 금지, 최상위 섹션마다 `data-block-id`, 편집 대상 텍스트 요소마다 블록 내 고유 `data-edit-id`(FR-17). 서버가 출력을 검증하고 금지 요소를 제거하며 `data-edit-id`를 부여. 이미지는 `<img src="asset:{assetId}">` 참조만 허용하고(그 외 `src`의 img는 제거, 원본 키·URL은 draftHtml에 넣지 않음), 서버가 프리뷰·최종 HTML에서 실제 URL로 바꾼다. 이 속성들은 draftHtml용이며 최종 HTML에서는 제거(FR-22) | BR-30, 31, 35, 37 | AC-BR35. 결과에 script·link·style 0개, class 속성 0개, 모든 섹션에 data-block-id |
 | FR-15 | M | 재생성(프로젝트당 3회, 조건부 원자 UPDATE로 선점하고 실패하면 복원). 재생성은 차감하지 않는다. 진행 중 작업 제한은 FR-35 | BR-11, BR-34, BR-47 | AC-BR34 |
 | FR-16 | M | 서버 프리뷰 합성: draftHtml의 이미지를 프리뷰 사본으로 바꾸고, 최상단 사선 오버레이와 블록별 반복 워터마크를 넣는다. 클라이언트는 프리뷰를 `sandbox` iframe(스크립트 불가)으로 렌더링. 프리뷰 이미지는 서버가 비공개 버킷의 390px 사본(`preview_key`)을 읽어 `data:image/webp;base64,...`로 프리뷰 HTML에 인라인한다(sandbox iframe은 인증 헤더를 못 보내고, 서명 URL은 비공개 버킷 URL을 응답에 노출하므로 쓰지 않는다. D-21). 프리뷰 응답에는 편집용 `blocks`도 포함한다(FR-17) | BR-32, 50, 51, 53, 54 | AC-BR50, AC-BR51, AC-BR54, PRD-V-4 |
-| FR-17 | M | 블록 텍스트 수동 편집. 서버가 생성 결과 정제 시 편집 대상 텍스트 요소에 블록 내 고유 `data-edit-id`를 부여하고, 프리뷰 응답에 `blocks: [{blockId, fields: [{editId, text}]}]`를 함께 반환한다. 에디터는 우측 패널 목록에서 블록·필드를 골라 편집한다(iframe 안 클릭 선택 없음). 클라이언트는 `{blockId, editId, text, version}`만 보내고 서버가 해당 요소의 텍스트 노드만 바꿔 draftHtml에 적용한 뒤 새 프리뷰를 반환. HTML 전체 덮어쓰기는 거절 | BR-40, 44 | AC-BR40. payload에 HTML 태그가 있으면 400 |
+| FR-17 | M | 블록 텍스트 수동 편집. 서버가 생성 결과 정제 시 편집 대상 텍스트 요소에 블록 내 고유 `data-edit-id`를 부여하고, 프리뷰 응답에 `blocks: [{blockId, fields: [{editId, text}]}]`를 함께 반환한다. 편집 대상은 글자(와 문장 안 서식 strong·em·b·i·u·s·small·span·br)만 가진 가장 바깥 요소이고, 블록 요소 사이에 떠 있는 글자는 span으로 감싼다. 에디터는 프리뷰 iframe 안에서 문구를 클릭해 바로 고치고(Enter 저장, Shift+Enter 줄바꿈, Esc 취소) 우측 패널 목록으로도 고칠 수 있다(클릭하면 패널의 블록도 선택). 서버는 해당 요소의 내용을 글자로 교체한다(이스케이프, 줄바꿈은 <br>, 문장 안 서식은 사라짐). 클라이언트는 `{blockId, editId, text, version}`만 보내고 서버가 draftHtml에 적용한 뒤 새 프리뷰를 반환. HTML 전체 덮어쓰기는 거절 | BR-40, 44 | AC-BR40. payload에 HTML 태그가 있으면 400 |
 | FR-18 | C | 요소 드래그·리사이즈(인라인 style의 위치·크기 값만 변경) | BR-40, 44 | 변경은 style 속성에만 반영 |
 | FR-19 | S | AI 부분 수정: LIGHT 모델, 지정 블록만 변경, 성공 3회·실패 6회 상한(둘 다 조건부 원자 UPDATE) | BR-41, 42, 43, 45, 47 | AC-BR41, 43, 45 |
 | FR-20 | M | PUBLISHED 프로젝트는 읽기 전용 | BR-46 | AC-BR46 |

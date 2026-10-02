@@ -8,6 +8,8 @@ const ALLOWED = new Set(('div section article header footer h1 h2 h3 h4 h5 h6 p 
   'ul ol li img table thead tbody tr th td figure figcaption blockquote').split(' '))
 const CONTAINERS = new Set(['div', 'section', 'article', 'header', 'footer'])
 const NOT_EDITABLE = new Set(['img', 'br', 'hr'])
+// 문장 안 서식. 이것과 글자로만 된 요소는 문장 통째로 편집한다(서식은 편집 시 사라짐)
+const INLINE = new Set(['strong', 'em', 'b', 'i', 'u', 's', 'small', 'span', 'br'])
 const ID_RE = /^[A-Za-z0-9_-]{1,32}$/
 const ASSET_RE = /^asset:[0-9a-f-]{36}$/
 // 계약의 4개 + CSS 이스케이프(\)·주석(/*)으로 우회하는 경우도 거부
@@ -30,7 +32,7 @@ function clean($, parent) {
     }
     for (const attr of Object.keys(node.attribs)) {
       const keep = attr === 'style' ? !BAD_STYLE.test(node.attribs.style)
-        : attr === 'data-block-id' || attr === 'data-edit-id' || (node.name === 'img' && (attr === 'alt' || attr === 'src'))
+        : attr === 'data-block-id' || attr === 'data-edit-id' || (node.name === 'img' && (attr === 'alt' || attr === 'src' || attr === 'data-img-id'))
       if (!keep) delete node.attribs[attr]
     }
     if (node.name === 'img' && !ASSET_RE.test(node.attribs.src ?? '')) $(node).remove() // BR-32
@@ -55,8 +57,9 @@ function assignIds(els, attr, prefix) {
   })
 }
 
-const isEditable = (el) => !NOT_EDITABLE.has(el.name) && el.children.length > 0 &&
-  el.children.every((c) => c.type === 'text') && el.children.some((c) => c.data.trim())
+const inlineOnly = (el) => el.children.every((c) => c.type === 'text' || (c.type === 'tag' && INLINE.has(c.name) && inlineOnly(c)))
+const isEditable = (el) => !NOT_EDITABLE.has(el.name) && el.children.length > 0 && inlineOnly(el) && el.children.some(
+  (c) => c.type === 'text' ? c.data.trim() : INLINE.has(c.name) && isEditable(c))
 
 export function sanitizeHtml(html) {
   const $ = load(html)
@@ -85,12 +88,23 @@ export function sanitizeHtml(html) {
   root.children().find('[data-block-id]').removeAttr('data-block-id')
   assignIds(blocks, 'data-block-id', 'b')
 
-  // BE-07b: 텍스트만 가진 요소에만 편집 ID
+  // 블록 요소와 섞여 떠 있는 글자는 span으로 감싸 편집 대상에 넣는다
+  for (const block of blocks) {
+    for (const el of [block, ...$(block).find('*').toArray()]) {
+      if (inlineOnly(el)) continue
+      for (const c of [...el.children]) if (c.type === 'text' && c.data.trim()) $(c).wrap('<span></span>')
+    }
+  }
+
+  // BE-07b: 글자(와 문장 안 서식)만 가진 가장 바깥 요소에만 편집 ID
   for (const block of blocks) {
     const els = [block, ...$(block).find('*').toArray()]
-    const targets = els.filter(isEditable)
-    for (const el of els) if (!isEditable(el)) delete el.attribs['data-edit-id']
+    const editable = els.filter(isEditable)
+    const targets = editable.filter((el) => !$(el).parents().toArray().some((a) => editable.includes(a)))
+    for (const el of editable) if (!targets.includes(el)) delete el.attribs['data-edit-id']
+    for (const el of els) if (!editable.includes(el)) delete el.attribs['data-edit-id']
     assignIds(targets, 'data-edit-id', 'e')
+    assignIds($(block).find('img').toArray(), 'data-img-id', 'i') // 이미지 교체·AI 변환 대상
   }
   return $.html()
 }
@@ -135,26 +149,97 @@ export function toFinalHtml(draftHtml, imageUrl = () => null) {
   const $ = load(replaceImages(draftHtml, imageUrl))
   $('[data-block-id]').removeAttr('data-block-id')
   $('[data-edit-id]').removeAttr('data-edit-id')
+  $('[data-img-id]').removeAttr('data-img-id')
   return $.html()
 }
 
 // BE-10b: 편집 UI용 블록·필드 목록(문서 순서, text = 현재 텍스트)
+// 편집 필드의 글자. <br>은 줄바꿈으로
+function editText(el) {
+  return el.children.map((c) => c.type === 'text' ? c.data : c.name === 'br' ? '\n' : c.type === 'tag' ? editText(c) : '').join('')
+}
+
+const escapeText = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
 export function extractBlocks(html) {
   const $ = load(html)
   return $.root().children().first().children('[data-block-id]').toArray().map((b) => ({
     blockId: b.attribs['data-block-id'],
     fields: [b, ...$(b).find('[data-edit-id]').toArray()]
       .filter((el) => el.attribs['data-edit-id'] !== undefined)
-      .map((el) => ({ editId: el.attribs['data-edit-id'], text: $(el).text() })),
+      .map((el) => ({ editId: el.attribs['data-edit-id'], text: editText(el) })),
+    images: $(b).find('img[data-img-id]').toArray().filter((el) => ASSET_RE.test(el.attribs.src ?? ''))
+      .map((el) => ({ imageId: el.attribs['data-img-id'], assetId: el.attribs.src.slice(6), ...imageStyle(el.attribs.style ?? '') })),
   }))
 }
 
-// FR-17, BR-40·BR-44: 블록 안 편집 요소의 텍스트만 교체(.text()가 이스케이프). 없으면 null
+// applyImageStyle이 쓰는 style의 역. width 없으면 100, margin이 left·right 형태가 아니면 center
+const styleProp = (style, prop) => style.match(new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;]+)`, 'i'))?.[1].trim()
+function imageStyle(style) {
+  const w = styleProp(style, 'width')?.match(/^(\d+(?:\.\d+)?)%$/)
+  const l = styleProp(style, 'margin-left')
+  const r = styleProp(style, 'margin-right')
+  return { widthPct: w ? Number(w[1]) : 100, align: l === '0' && r === 'auto' ? 'left' : l === 'auto' && r === '0' ? 'right' : 'center' }
+}
+
+const findBlock = ($, blockId) => $.root().children().first().children().toArray().find((b) => b.attribs['data-block-id'] === blockId)
+
+// FR-17, BR-40·BR-44: 블록 안 편집 요소의 내용을 글자로 교체(이스케이프, 줄바꿈은 <br>). 없으면 null
 export function applyTextEdit(html, blockId, editId, text) {
   const $ = load(html)
   const block = $.root().children().first().children().toArray().find((b) => b.attribs['data-block-id'] === blockId)
   const el = block && [block, ...$(block).find('[data-edit-id]').toArray()].find((e) => e.attribs['data-edit-id'] === editId)
   if (!el) return null
-  $(el).text(text)
+  $(el).html(text.split('\n').map(escapeText).join('<br>'))
   return $.html()
+}
+
+// 블록 안 이미지의 asset을 교체. 없으면 null
+export function applyImageEdit(html, blockId, imageId, assetId) {
+  const $ = load(html)
+  const block = $.root().children().first().children().toArray().find((b) => b.attribs['data-block-id'] === blockId)
+  const el = block && $(block).find('img').toArray().find((e) => e.attribs['data-img-id'] === imageId)
+  if (!el) return null
+  el.attribs.src = `asset:${assetId}`
+  return $.html()
+}
+
+// 이미지 폭(%)·정렬을 인라인 style로 설정(draft·최종 HTML에 남는다). 없으면 null
+const MARGIN = { left: ['0', 'auto'], center: ['auto', 'auto'], right: ['auto', '0'] }
+export function applyImageStyle(html, blockId, imageId, widthPct, align) {
+  const $ = load(html)
+  const block = findBlock($, blockId)
+  const el = block && $(block).find('img').toArray().find((e) => e.attribs['data-img-id'] === imageId)
+  if (!el) return null
+  const [l, r] = MARGIN[align]
+  el.attribs.style = `width:${widthPct}%;height:auto;display:block;margin-left:${l};margin-right:${r}`
+  return $.html()
+}
+
+// 최상위 블록의 HTML. 없으면 null
+export function blockHtml(html, blockId) {
+  const $ = load(html)
+  const block = findBlock($, blockId)
+  return block ? $.html(block) : null
+}
+
+// 블록 재생성: LLM 조각에서 블록 하나만 골라 정제해 draft의 blockId 블록과 바꾼다. 쓸 내용이 없으면 null
+// 고르는 순서: data-block-id가 같은 요소 → 첫 <section> → 조각 전체(최상위 설명문 제외). 코드펜스 표시는 어디 있든 지운다
+export function replaceBlock(draftHtml, blockId, fragmentHtml) {
+  const $f = load(fragmentHtml.replace(/```[a-z]*/gi, ''))
+  $f('[data-edit-id]').removeAttr('data-edit-id') // 블록 안에서 새로 부여
+  $f('[data-img-id]').removeAttr('data-img-id')
+  const els = $f('*').toArray()
+  const picked = els.find((e) => e.attribs['data-block-id'] === blockId) ?? els.find((e) => e.name === 'section')
+  if (!picked) $f.root().contents().filter((_, n) => n.type === 'text').remove()
+  // 블록 ID를 먼저 붙여야 정제가 하나뿐인 감싸개(section)를 벗기지 않는다
+  if (picked) picked.attribs['data-block-id'] = blockId
+  const one = picked ? $f.html(picked) : `<section data-block-id="${blockId}">${$f.html()}</section>`
+  const $s = load(sanitizeHtml(one)) // LY-18: XSS·외부 이미지 제거
+  const block = $s.root().children().first().children().first()
+  if (!block.length || (!block.text().trim() && block.find('img').length === 0)) return null
+  block.attr('data-block-id', blockId)
+  const $ = load(draftHtml)
+  $(findBlock($, blockId)).replaceWith($s.html(block))
+  return sanitizeHtml($.html()) // 전체 한 번 더(기존 ID는 유지)
 }

@@ -2,24 +2,27 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import type { Me, Project, ProjectStatus } from './api/types.ts'
 import {
-  FORM_MAX, INTRO_MIN, REGEN_MAX, editorFlags, formatElapsed, isEligible, projectPath, validateForm,
+  AI_IMAGE_MAX, ASSET_MAX, BLOCK_REGEN_MAX, FORM_MAX, INTRO_MIN, REGEN_MAX, editorFlags, formatElapsed, isEligible, projectPath, validateForm,
 } from './projectView.ts'
 
 const me: Me = { email: 'a@b.c', emailVerified: true, balance: 3 }
 
 const project = (over: Partial<Project> = {}): Project => ({
   id: 'p1', status: 'DRAFT', version: 1, form: {}, selectedUsps: [],
-  analyzeCount: 0, regenCount: 0, aiEditCount: 0, aiEditFailCount: 0,
-  activeJobType: null, publishedAt: null, createdAt: '2026-10-01T00:00:00Z',
+  analyzeCount: 0, regenCount: 0, aiEditCount: 0, aiEditFailCount: 0, aiImageCount: 0, blockRegenCount: 0,
+  activeJobType: null, activeJobStartedAt: null, publishedAt: null, createdAt: '2026-10-01T00:00:00Z',
   ...over,
 })
 
-const NONE = { generate: false, regenerate: false, save: false, publish: false }
-const ALL_EDIT = { generate: false, regenerate: true, save: true, publish: true }
+const NONE = { generate: false, regenerate: false, save: false, publish: false, image: false, aiImage: false, blockRegen: false }
+const ALL_EDIT = { generate: false, regenerate: true, save: true, publish: true, image: true, aiImage: true, blockRegen: true }
 
 describe('상수(백엔드 config.js와 같은 값)', () => {
-  it('REGEN_MAX 3, INTRO_MIN 10, FORM_MAX', () => {
+  it('REGEN_MAX 3, INTRO_MIN 10, FORM_MAX, AI_IMAGE_MAX 10, ASSET_MAX 10', () => {
     assert.equal(REGEN_MAX, 3)
+    assert.equal(AI_IMAGE_MAX, 10)
+    assert.equal(ASSET_MAX, 10)
+    assert.equal(BLOCK_REGEN_MAX, 10)
     assert.equal(INTRO_MIN, 10)
     assert.deepEqual({ ...FORM_MAX }, { productName: 100, category: 50, intro: 1000, toneGuide: 200 })
   })
@@ -63,6 +66,21 @@ describe('editorFlags', () => {
   it('regenCount 3(REGEN_MAX) → regenerate만 false', () => {
     assert.deepEqual(editorFlags(project({ status: 'GENERATED', regenCount: 3 }), me, false), { ...ALL_EDIT, regenerate: false })
     assert.equal(editorFlags(project({ status: 'GENERATED', regenCount: 2 }), me, false).regenerate, true)
+  })
+
+  it('aiImageCount 10(AI_IMAGE_MAX) → aiImage만 false, 9 → true', () => {
+    assert.deepEqual(editorFlags(project({ status: 'EDITING', aiImageCount: 10 }), me, false), { ...ALL_EDIT, aiImage: false })
+    assert.equal(editorFlags(project({ status: 'GENERATED', aiImageCount: 9 }), me, false).aiImage, true)
+  })
+
+  it('image는 save와 같은 조건(regenCount·aiImageCount 소진과 무관)', () => {
+    const f = editorFlags(project({ status: 'GENERATED', regenCount: 3, aiImageCount: 10 }), me, false)
+    assert.equal(f.image, true)
+    assert.equal(f.image, f.save)
+  })
+
+  it('activeJobType AI_IMAGE → 전부 false', () => {
+    assert.deepEqual(editorFlags(project({ status: 'EDITING', activeJobType: 'AI_IMAGE' }), me, false), NONE)
   })
 
   it('PUBLISHED → 전부 false', () => {

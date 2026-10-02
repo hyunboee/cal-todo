@@ -123,6 +123,9 @@ async function assertDataUriImages(html) {
   return srcs.length
 }
 
+// 응답 blocks에서 images를 뺀 것(images는 src가 data URI로 바뀌어 HTML에서 assetId를 알 수 없음)
+const fieldsOnly = (blocks) => blocks.map(({ blockId, fields }) => ({ blockId, fields }))
+
 // 응답 HTML에서 기대 blocks를 직접 추출(DEC-08)
 function blocksOf(html) {
   const $ = load(html)
@@ -181,14 +184,14 @@ test('BE-10b ② DEC-08: blocks = 프리뷰 HTML의 data-block-id·data-edit-id,
   const id = await insertProject(u.userId, { status: 'GENERATED', version: 2, draftHtml: DRAFT })
   const r = await preview(u.token, id)
   assert.equal(r.status, 200)
-  assert.deepEqual(r.body.blocks, blocksOf(r.body.html))
+  assert.deepEqual(fieldsOnly(r.body.blocks), blocksOf(r.body.html))
   assert.deepEqual(r.body.blocks.map((b) => b.fields.length), [2, 2, 1])
   assert.deepEqual(r.body.blocks.flatMap((b) => b.fields.map((f) => f.text)), ['제목', '본문', '사용', '설명', '끝'])
 
   // draft가 바뀌면 text도 현재값
   await pool.query("UPDATE projects SET draft_html = replace(draft_html, '>본문<', '>바뀐 본문<') WHERE id = $1", [id])
   const after = await preview(u.token, id)
-  assert.deepEqual(after.body.blocks, blocksOf(after.body.html))
+  assert.deepEqual(fieldsOnly(after.body.blocks), blocksOf(after.body.html))
   assert.equal(after.body.blocks[0].fields[1].text, '바뀐 본문')
   assert.equal(after.body.blocks[0].fields[1].editId, r.body.blocks[0].fields[1].editId)
 })
@@ -213,7 +216,7 @@ test('BE-10b ④ 스모크: 폼으로 프로젝트 생성 → 업로드 → 생�
 
   const g = await generateViaApi(base, u.token, p.body.id, p.body.version)
   assert.equal(g.status, 200, g.text)
-  assert.deepEqual(g.body.blocks, blocksOf(g.body.html))
+  assert.deepEqual(fieldsOnly(g.body.blocks), blocksOf(g.body.html))
   assert.deepEqual(g.body.blocks.map((b) => b.fields.length), [2, 2, 1]) // MOCK_MAIN_HTML(계약 3.1)
 
   // BE-09b: draft에 업로드한 이미지 참조(asset:ID)

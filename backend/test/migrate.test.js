@@ -10,6 +10,8 @@ const backendDir = fileURLToPath(new URL('..', import.meta.url))
 const badDir = fileURLToPath(new URL('./fixtures/bad-migrations/', import.meta.url))
 const schemaPath = fileURLToPath(new URL('../../docs/schema.sql', import.meta.url))
 const initPath = fileURLToPath(new URL('../migrations/001_init.sql', import.meta.url))
+const aiImagePath = fileURLToPath(new URL('../migrations/002_ai_image.sql', import.meta.url))
+const blockRegenPath = fileURLToPath(new URL('../migrations/003_block_regen.sql', import.meta.url))
 
 const runCli = (...args) =>
   spawnSync(process.execPath, ['--env-file=.env.test', 'scripts/migrate.js', ...args], { cwd: backendDir, encoding: 'utf8' })
@@ -57,11 +59,11 @@ test('DB-01 ③ 오류 SQL 파일 → 종료 코드 1, stderr migrate failed(CLI
   assert.equal(probe.rows[0].t, null)
 })
 
-test('DB-01 ④ 001_init.sql과 docs/schema.sql의 diff가 BEGIN/COMMIT뿐', () => {
+test('DB-01 ④ 001_init.sql + 002_ai_image.sql + 003_block_regen.sql과 docs/schema.sql의 diff가 BEGIN/COMMIT뿐', () => {
   const lf = (s) => s.replace(/\r\n/g, '\n')
   const expected = lf(readFileSync(schemaPath, 'utf8'))
     .split('\n').filter(l => l !== 'BEGIN;' && l !== 'COMMIT;').join('\n')
-  assert.equal(lf(readFileSync(initPath, 'utf8')), expected)
+  assert.equal(lf(readFileSync(initPath, 'utf8')) + lf(readFileSync(aiImagePath, 'utf8')) + lf(readFileSync(blockRegenPath, 'utf8')), expected)
 })
 
 test('DB-01 ⑤ credit_ledger_project_deduct_uq 부분 유니크, credit_wallets CHECK(>= 0)', async () => {

@@ -8,7 +8,7 @@ const fallback = messageOf(null)
 const CODES = [
   'INVALID_CREDENTIALS', 'VALIDATION_FAILED', 'EMAIL_NOT_VERIFIED', 'INSUFFICIENT_CREDIT',
   'VERSION_CONFLICT', 'INVALID_STATE', 'JOB_IN_PROGRESS',
-  'REGEN_LIMIT', 'ANALYZE_LIMIT', 'AI_EDIT_LIMIT', 'RATE_LIMITED', 'DAILY_LLM_LIMIT',
+  'REGEN_LIMIT', 'ANALYZE_LIMIT', 'AI_EDIT_LIMIT', 'AI_IMAGE_LIMIT', 'BLOCK_REGEN_LIMIT', 'RATE_LIMITED', 'DAILY_LLM_LIMIT',
   'UPSTREAM_FAILED', 'LLM_BUSY', 'NOT_FOUND', 'NETWORK_ERROR',
 ]
 
@@ -35,6 +35,10 @@ describe('messageOf', () => {
     assert.ok(m.includes('최신 상태로 갱신'))
     assert.equal(messageOf({ status: 409, code: 'INVALID_STATE' }), m)
     assert.equal(messageOf({ status: 409, code: 'JOB_IN_PROGRESS' }), m)
+  })
+
+  it('BLOCK_REGEN_LIMIT → 슬라이드 재생성 횟수 소진 문구', () => {
+    assert.equal(messageOf({ status: 429, code: 'BLOCK_REGEN_LIMIT' }), '슬라이드 재생성 횟수를 모두 사용했습니다')
   })
 
   it('DAILY_LLM_LIMIT → "내일 0시(한국 시간)" 포함', () => {

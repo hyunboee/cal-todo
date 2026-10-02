@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ApiError } from '../api/client.ts'
-import { getFinal, publish, regenerate, saveEdit } from '../api/editor.ts'
-import type { EditInput, FinalHtml } from '../api/editor.ts'
-import type { Preview } from '../api/types.ts'
+import { aiImage, blockRegenerate, getFinal, listAssets, publish, regenerate, saveEdit, saveImageEdit, saveImageStyle } from '../api/editor.ts'
+import type { AiImageInput, EditInput, FinalHtml, ImageEditInput, ImageStyleInput } from '../api/editor.ts'
+import type { Preview, ProjectAsset } from '../api/types.ts'
 import { currentVersion } from './projects.ts'
 
 type QC = ReturnType<typeof useQueryClient>
@@ -20,6 +20,48 @@ export function useSaveEdit(id: string) {
     onSuccess: (pv) => afterPreview(qc, id, pv),
   })
 }
+
+export function useImageEdit(id: string) {
+  const qc = useQueryClient()
+  return useMutation<Preview, ApiError, ImageEditInput>({
+    mutationFn: (input) => saveImageEdit(id, input, currentVersion(qc, id)),
+    onSuccess: (pv) => afterPreview(qc, id, pv),
+  })
+}
+
+export function useAiImage(id: string) {
+  const qc = useQueryClient()
+  return useMutation<Preview, ApiError, AiImageInput>({
+    mutationKey: ['ai-image', id],
+    mutationFn: (input) => aiImage(id, input, currentVersion(qc, id)),
+    onSuccess: (pv) => {
+      afterPreview(qc, id, pv)
+      void qc.invalidateQueries({ queryKey: ['assets', id] })
+    },
+    onError: () => void qc.invalidateQueries({ queryKey: ['project', id] }),
+  })
+}
+
+export function useBlockRegenerate(id: string) {
+  const qc = useQueryClient()
+  return useMutation<Preview, ApiError, string>({
+    mutationKey: ['block-regen', id],
+    mutationFn: (blockId) => blockRegenerate(id, blockId, currentVersion(qc, id)),
+    onSuccess: (pv) => afterPreview(qc, id, pv),
+    onError: () => void qc.invalidateQueries({ queryKey: ['project', id] }),
+  })
+}
+
+export function useImageStyle(id: string) {
+  const qc = useQueryClient()
+  return useMutation<Preview, ApiError, ImageStyleInput>({
+    mutationFn: (input) => saveImageStyle(id, input, currentVersion(qc, id)),
+    onSuccess: (pv) => afterPreview(qc, id, pv),
+  })
+}
+
+export const useAssets = (id: string | undefined) =>
+  useQuery<ProjectAsset[], ApiError>({ queryKey: ['assets', id], queryFn: () => listAssets(id!), enabled: !!id })
 
 export function useRegenerate(id: string) {
   const qc = useQueryClient()

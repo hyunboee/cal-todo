@@ -47,10 +47,13 @@ export function useSaveForm() {
   })
 }
 
-export const useUploadAsset = () =>
-  useMutation<AssetUploadResult, ApiError, { id: string; file: File }>({
+export function useUploadAsset() {
+  const qc = useQueryClient()
+  return useMutation<AssetUploadResult, ApiError, { id: string; file: File }>({
     mutationFn: ({ id, file }) => uploadAsset(id, file),
+    onSuccess: (_r, { id }) => void qc.invalidateQueries({ queryKey: ['assets', id] }),
   })
+}
 
 export function useGenerate(id: string) {
   const qc = useQueryClient()

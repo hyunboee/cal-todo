@@ -353,6 +353,28 @@ paths:
   /api/projects/{id}/assets:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [assets]
+      operationId: listAssets
+      summary: 프로젝트 이미지 목록(이미지 교체용 썸네일)
+      description: |
+        이미지 교체 모달용. 자격 무관, PUBLISHED도 200, 남의 프로젝트는 404. 정렬 created_at, id.
+        thumbnail은 390px 워터마크 사본 data URI(webp). 원본·프리뷰 키와 URL은 응답에 없다.
+      responses:
+        '200':
+          description: 이미지 목록
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectAsset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
     post:
       tags: [assets]
       operationId: uploadAsset
@@ -625,6 +647,176 @@ paths:
       responses:
         '200':
           description: 적용됨. 새 version과 새 프리뷰(blocks 포함)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/projects/{id}/image-edits:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [editing]
+      operationId: createImageEdit
+      summary: 블록 이미지 교체 `*`
+      description: |
+        body `{blockId, imageId, assetId, version}`만 허용. imageId는 `blocks[].images[].imageId`(`data-img-id`), assetId는 이 프로젝트의 asset.
+        새 이미지로 바꾸려면 먼저 POST /assets로 올린 뒤 그 id로 호출한다. 다른 프로젝트 asset·없는 imageId는 400.
+        성공 시 GENERATED → EDITING, version+1, EditOperation(MANUAL, payload {imageId, assetId}). 무료·횟수 제한 없음.
+        판정 순서: 400 형식 → 404 → 409 PUBLISHED → 403 → 402 → 409 상태·version·진행 중 작업 → 400 대상.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageEditRequest'
+      responses:
+        '200':
+          description: 적용됨. 새 version과 새 프리뷰
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/projects/{id}/ai-images:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [editing]
+      operationId: createAiImage
+      summary: 블록 이미지 AI 변환 `*`
+      description: |
+        body `{blockId, imageId, prompt, version}`만 허용. prompt는 trim 후 1~500자, HTML 태그 금지. GENERATED·EDITING에서만.
+        선택 이미지 원본(긴 변 1024px 이하로 축소)을 IMAGE 모델로 변환해 새 asset으로 저장하고 그 자리에 넣는다(프로젝트 10장 상한에 포함).
+        프로젝트당 성공 10회(`aiImageCount`), 소진 시 429 `AI_IMAGE_LIMIT`, LLM 0회. 실패(429 일일·503·502·409)는 횟수 복원.
+        계정 일일 상한은 MAIN과 합산. 성공 시 EDITING, version+1, EditOperation(AI, payload {imageId, assetId, prompt}). 차감 없음.
+        판정 순서: 400 형식 → 404 → 409 PUBLISHED → 403 → 402 → 409 상태·version·진행 중 작업 → 400 대상·10장 → 429 횟수 → 409 선점 → 429 일일 / 503 / 502.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiImageRequest'
+      responses:
+        '200':
+          description: 적용됨. 새 version과 새 프리뷰
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/projects/{id}/block-regenerate:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [editing]
+      operationId: createBlockRegenerate
+      summary: 블록(슬라이드) 하나 재생성 `*`
+      description: |
+        body `{blockId, version}`만 허용. GENERATED·EDITING에서만. 현재 draft 전체 HTML과 대상 블록 HTML을 MAIN 모델에 보내 전체 스타일에 맞춰 그 블록만 다시 쓴다.
+        응답에서 첫 블록 하나만 정제해 교체한다(data-block-id 유지, 블록 안 편집·이미지 ID는 새로 부여). 다른 블록의 수동 편집은 유지된다.
+        프로젝트당 성공 10회(`blockRegenCount`, 전체 재생성 `regenCount`와 별도), 소진 시 429 `BLOCK_REGEN_LIMIT`, LLM 0회. 실패(429 일일·503·502·409)는 횟수 복원.
+        계정 일일 상한은 MAIN 버킷에 집계. 정제 후 블록이 비면 502. 성공 시 EDITING, version+1, EditOperation(AI, payload {blockId, kind: BLOCK_REGEN}). 차감 없음.
+        판정 순서: 400 형식 → 404 → 409 PUBLISHED → 403 → 402 → 409 상태·version·진행 중 작업 → 400 대상 블록 → 429 횟수 → 409 선점 → 429 일일 / 503 / 502.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockRegenerateRequest'
+      responses:
+        '200':
+          description: 적용됨. 새 version과 새 프리뷰
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/projects/{id}/image-styles:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [editing]
+      operationId: createImageStyle
+      summary: 블록 이미지 크기·정렬 `*`
+      description: |
+        body `{blockId, imageId, widthPct, align, version}`만 허용. widthPct는 10~100 정수, 5의 배수. align은 left|center|right.
+        img의 style을 `width:{n}%;height:auto;display:block;margin-left:…;margin-right:…`로 설정한다(draft·최종 HTML에 남음). 없는 imageId·blockId는 400.
+        성공 시 GENERATED → EDITING, version+1, EditOperation(MANUAL, payload {imageId, widthPct, align}). 무료·횟수 제한 없음.
+        판정 순서: 400 형식 → 404 → 409 PUBLISHED → 403 → 402 → 409 상태·version·진행 중 작업 → 400 대상.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageStyleRequest'
+      responses:
+        '200':
+          description: 적용됨. 새 version과 새 프리뷰
           content:
             application/json:
               schema:
@@ -972,7 +1164,7 @@ components:
               code: VERSION_CONFLICT
               message: 다른 곳에서 먼저 변경되었습니다
     TooManyRequests:
-      description: '한도 초과, LLM 미호출. `ANALYZE_LIMIT` / `REGEN_LIMIT` / `AI_EDIT_LIMIT` / `DAILY_LLM_LIMIT`(Asia/Seoul 자정 초기화, 응답에 초기화 시각 필드는 없고 프론트엔드가 고정 문구로 안내) / `RATE_LIMITED`(NFR-04)'
+      description: '한도 초과, LLM 미호출. `ANALYZE_LIMIT` / `REGEN_LIMIT` / `AI_EDIT_LIMIT` / `AI_IMAGE_LIMIT` / `BLOCK_REGEN_LIMIT` / `DAILY_LLM_LIMIT`(Asia/Seoul 자정 초기화, 응답에 초기화 시각 필드는 없고 프론트엔드가 고정 문구로 안내) / `RATE_LIMITED`(NFR-04)'
       content:
         application/json:
           schema:
@@ -1022,6 +1214,8 @@ components:
                 - ANALYZE_LIMIT
                 - REGEN_LIMIT
                 - AI_EDIT_LIMIT
+                - AI_IMAGE_LIMIT
+                - BLOCK_REGEN_LIMIT
                 - DAILY_LLM_LIMIT
                 - RATE_LIMITED
                 - UPSTREAM_FAILED
@@ -1138,10 +1332,18 @@ components:
           type: integer
           minimum: 0
           description: AI 수정 실패, 상한 6(S)
+        aiImageCount:
+          type: integer
+          minimum: 0
+          description: AI 이미지 변환 성공, 상한 10
+        blockRegenCount:
+          type: integer
+          minimum: 0
+          description: 블록 재생성 성공, 상한 10(regenCount와 별도)
         activeJobType:
           type: string
           nullable: true
-          enum: [ANALYZE, GENERATE, REGEN, AI_EDIT, null]
+          enum: [ANALYZE, GENERATE, REGEN, AI_EDIT, AI_IMAGE, BLOCK_REGEN, null]
           description: 진행 중 LLM 작업. null이면 없음
         activeJobStartedAt:
           type: string
@@ -1168,6 +1370,8 @@ components:
         regenCount: 1
         aiEditCount: 0
         aiEditFailCount: 0
+        aiImageCount: 0
+        blockRegenCount: 0
         activeJobType: null
         activeJobStartedAt: null
         publishedAt: null
@@ -1180,6 +1384,17 @@ components:
         id:
           type: string
           format: uuid
+
+    ProjectAsset:
+      type: object
+      required: [id, thumbnail]
+      properties:
+        id:
+          type: string
+          format: uuid
+        thumbnail:
+          type: string
+          description: 390px 워터마크 사본 data URI(data:image/webp;base64,...)
 
     AnalysisResult:
       type: object
@@ -1207,10 +1422,10 @@ components:
           description: 워터마크가 합성된 프리뷰 HTML(sandbox iframe srcdoc용)
         blocks:
           type: array
-          description: 편집용 블록·필드 목록(DEC-08). `data-block-id`·`data-edit-id`에서 추출
+          description: 편집용 블록·필드·이미지 목록(DEC-08). `data-block-id`·`data-edit-id`·`data-img-id`에서 추출
           items:
             type: object
-            required: [blockId, fields]
+            required: [blockId, fields, images]
             properties:
               blockId:
                 type: string
@@ -1226,6 +1441,26 @@ components:
                     text:
                       type: string
                       description: 현재 텍스트
+              images:
+                type: array
+                description: 블록 안 교체 가능한 이미지(문서 순서). data-img-id가 없는 기존 draft는 빈 배열
+                items:
+                  type: object
+                  required: [imageId, assetId, widthPct, align]
+                  properties:
+                    imageId:
+                      type: string
+                      description: 블록 내 고유(`data-img-id`)
+                    assetId:
+                      type: string
+                      format: uuid
+                    widthPct:
+                      type: number
+                      description: style의 width(%). 없으면 100
+                    align:
+                      type: string
+                      enum: [left, center, right]
+                      description: style의 margin-left·right로 판정. 기본 center
       example:
         version: 4
         html: '<div style="width:780px">...PREVIEW ONLY...</div>'
@@ -1234,6 +1469,87 @@ components:
             fields:
               - editId: e1
                 text: 가볍고 강력한 흡입력
+            images:
+              - imageId: i1
+                assetId: 7b2e4c1a-5d3f-4a8e-9c61-0f2d3b4a5e67
+                widthPct: 100
+                align: center
+
+    ImageEditRequest:
+      type: object
+      required: [blockId, imageId, assetId, version]
+      additionalProperties: false
+      properties:
+        blockId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        imageId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        assetId:
+          type: string
+          format: uuid
+          description: 이 프로젝트의 asset id(소문자 uuid)
+        version:
+          $ref: '#/components/schemas/Version'
+
+    BlockRegenerateRequest:
+      type: object
+      required: [blockId, version]
+      additionalProperties: false
+      properties:
+        blockId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        version:
+          $ref: '#/components/schemas/Version'
+
+    ImageStyleRequest:
+      type: object
+      required: [blockId, imageId, widthPct, align, version]
+      additionalProperties: false
+      properties:
+        blockId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        imageId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        widthPct:
+          type: integer
+          minimum: 10
+          maximum: 100
+          multipleOf: 5
+        align:
+          type: string
+          enum: [left, center, right]
+        version:
+          $ref: '#/components/schemas/Version'
+
+    AiImageRequest:
+      type: object
+      required: [blockId, imageId, prompt, version]
+      additionalProperties: false
+      properties:
+        blockId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        imageId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        prompt:
+          type: string
+          maxLength: 500
+          description: 변환 요청(trim 후 1~500자). HTML 태그가 있으면 400
+        version:
+          $ref: '#/components/schemas/Version'
 
     EditRequest:
       type: object

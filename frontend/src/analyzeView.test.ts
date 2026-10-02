@@ -9,7 +9,7 @@ const me: Me = { email: 'a@b.c', emailVerified: true, balance: 3 }
 
 const project = (over: Partial<Project> = {}): Project => ({
   id: 'p1', status: 'DRAFT', version: 1, form: {}, selectedUsps: [],
-  analyzeCount: 0, regenCount: 0, aiEditCount: 0, aiEditFailCount: 0,
+  analyzeCount: 0, regenCount: 0, aiEditCount: 0, aiEditFailCount: 0, aiImageCount: 0, blockRegenCount: 0,
   activeJobType: null, activeJobStartedAt: null, publishedAt: null, createdAt: '2026-10-01T00:00:00Z',
   ...over,
 })

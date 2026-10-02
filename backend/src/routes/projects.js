@@ -4,7 +4,7 @@ import { AppError } from '../lib/errors.js'
 import { readVersion } from '../lib/validate.js'
 import { assertEligible } from '../services/eligibility.js'
 import { createProject, listProjects, getProject, saveForm, uploadAsset } from '../services/projects.js'
-import { getPreview } from '../services/preview.js'
+import { getPreview, listAssets } from '../services/preview.js'
 import { saveUsps } from '../services/analyze.js'
 import { FORM_LIMITS, ASSET_MAX_BYTES, ASSET_MIME } from '../config.js'
 
@@ -71,4 +71,9 @@ projectsRouter.post('/projects/:id/assets', (req, res, next) => {
 }, async (req, res) => {
   if (!req.file) throw new AppError(400, 'VALIDATION_FAILED')
   res.status(201).json(await uploadAsset(req.userId, req.params.id, req.file))
+})
+
+// 이미지 교체 목록(워터마크 썸네일). 자격 무관, PUBLISHED도 200
+projectsRouter.get('/projects/:id/assets', async (req, res) => {
+  res.json(await listAssets(req.userId, req.params.id))
 })

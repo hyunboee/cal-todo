@@ -1,9 +1,11 @@
+import { Link, useLocation } from 'react-router'
 import { useLogout, useMe } from '../hooks/auth.ts'
 import styles from './Header.module.css'
 
 export function Header() {
   const me = useMe().data
   const logout = useLogout()
+  const onList = useLocation().pathname.replace(/\/$/, '') === '/app'
   const low = !!me && me.balance <= 0
   const status = me && (
     <span className={me.emailVerified ? styles.verified : styles.unverified}>
@@ -19,8 +21,9 @@ export function Header() {
     <header className={styles.header}>
       {/* 정적 랜딩(/)은 SPA 밖 페이지라 Link가 아닌 a로 이동 */}
       <a href="/" className={styles.logo}>
-        <span className={styles.mark}>C</span>Detail Maker
+        <span className={styles.mark}>C</span><span className={styles.logoText}>Detail Maker</span>
       </a>
+      {!onList && <Link to="/app" className={`btn-secondary ${styles.list}`}>프로젝트 목록</Link>}
       <span className={styles.spacer} />
       {me && (
         <span className={`${styles.balance} ${low ? styles.low : ''}`}>

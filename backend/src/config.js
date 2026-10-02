@@ -61,6 +61,8 @@ const llmModel = (key) => {
 }
 export const LLM_MAIN = llmModel('LLM_MAIN')
 export const LLM_LIGHT = llmModel('LLM_LIGHT')
+export const LLM_IMAGE = llmModel('LLM_IMAGE')
+if (LLM_IMAGE.startsWith('anthropic:')) throw new Error('LLM_IMAGE must be google|mock:<model>') // 이미지 생성 미지원
 
 // DEC-07: S3_ENDPOINT가 있으면 R2(S3 호환), 없으면 로컬 디렉터리(개발·테스트)
 export const S3_ENDPOINT = devDefault('S3_ENDPOINT', '')
@@ -90,7 +92,7 @@ export const RATE_LIMIT_REFRESH = 30
 export const JSON_BODY_LIMIT = '1mb' // OP-05
 export const LLM_TIMEOUT_MS = 90000 // NFR-02
 export const LLM_DAILY_LIMIT = { MAIN: 20, LIGHT: 50 } // D-28
-export const LLM_CONCURRENCY = { MAIN: 20, LIGHT: 40 } // D-29
+export const LLM_CONCURRENCY = { MAIN: 20, LIGHT: 40, IMAGE: 10 } // D-29, IMAGE [가정]
 export const LLM_QUEUE_MAX = 100 // D-29
 export const LLM_QUEUE_WAIT_MS = 30000 // D-29
 export const LLM_RETRY_AFTER_SEC = 10 // [가정]
@@ -104,3 +106,7 @@ export const PREVIEW_IMAGE_WIDTH = 390 // D-21
 export const ANALYZE_MAX = 3 // D-27
 export const CRAWL_TIMEOUT_MS = 10000 // OP-09
 export const EDIT_TEXT_MAX = 2000 // [가정]
+export const AI_IMAGE_MAX = 10 // 프로젝트당 AI 이미지 변환(성공만)
+export const AI_IMAGE_PROMPT_MAX = 500
+export const AI_IMAGE_INPUT_PX = 1024 // LLM에 보내는 원본의 긴 변
+export const BLOCK_REGEN_MAX = 10 // 프로젝트당 블록 재생성(성공만)

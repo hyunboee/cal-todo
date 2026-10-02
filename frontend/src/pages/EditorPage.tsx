@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router'
 import { Banner } from '../components/Banner.tsx'
 import { BlockEditor } from '../components/BlockEditor.tsx'
+import { ImagePanel } from '../components/ImagePanel.tsx'
+import { ImagePickerModal } from '../components/ImagePickerModal.tsx'
 import { PreviewFrame } from '../components/PreviewFrame.tsx'
 import { PublishModal } from '../components/PublishModal.tsx'
 import { useMe } from '../hooks/auth.ts'
-import { usePublish, useRegenerate, useSaveEdit } from '../hooks/editor.ts'
+import { useAiImage, useBlockRegenerate, useImageStyle, usePublish, useRegenerate, useSaveEdit } from '../hooks/editor.ts'
 import { useGenerate, usePreview, useProject } from '../hooks/projects.ts'
+import { findImage, jobLabel } from '../editorView.ts'
 import { messageOf } from '../messages.ts'
 import { REGEN_MAX, editorFlags, formatElapsed } from '../projectView.ts'
 import { useUiStore } from '../stores/ui.ts'
@@ -22,11 +25,17 @@ export function EditorPage() {
   const regen = useRegenerate(id ?? '')
   const save = useSaveEdit(id ?? '')
   const pub = usePublish(id ?? '')
+  const ai = useAiImage(id ?? '')
+  const blockRegen = useBlockRegenerate(id ?? '')
+  const imgStyle = useImageStyle(id ?? '')
   const modal = useUiStore((s) => s.modal)
   const setModal = useUiStore((s) => s.setModal)
   const setToast = useUiStore((s) => s.setToast)
+  const selectBlock = useUiStore((s) => s.selectBlock)
+  const selectImage = useUiStore((s) => s.selectImage)
+  const selectedImage = useUiStore((s) => s.selectedImage)
   const p = project.data
-  const busy = gen.isPending || regen.isPending || !!p?.activeJobType
+  const busy = gen.isPending || regen.isPending || ai.isPending || blockRegen.isPending || !!p?.activeJobType
   const hasPreview = p?.status === 'GENERATED' || p?.status === 'EDITING'
   const preview = usePreview(id, p?.version, hasPreview && !p?.activeJobType)
 
@@ -44,21 +53,25 @@ export function EditorPage() {
   if (p.status === 'PUBLISHED') return <Navigate to={`/app/projects/${p.id}/final`} replace />
   if (!hasPreview && !busy && !intent && !gen.isError) return <Navigate to={`/app/projects/${p.id}/analyze`} replace />
 
-  const pending = gen.isPending || regen.isPending || save.isPending || pub.isPending
+  const pending = gen.isPending || regen.isPending || ai.isPending || blockRegen.isPending || imgStyle.isPending || save.isPending || pub.isPending
   const flags = editorFlags(p, me.data, pending)
   const since = gen.submittedAt || regen.submittedAt || (p.activeJobStartedAt ? Date.parse(p.activeJobStartedAt) : openedAt)
   const waiting =
     (gen.isPending && gen.failureReason?.status === 503 ? gen.failureReason : null) ??
-    (regen.isPending && regen.failureReason?.status === 503 ? regen.failureReason : null)
+    (regen.isPending && regen.failureReason?.status === 503 ? regen.failureReason : null) ??
+    (ai.isPending && ai.failureReason?.status === 503 ? ai.failureReason : null) ??
+    (blockRegen.isPending && blockRegen.failureReason?.status === 503 ? blockRegen.failureReason : null)
   const showError = (e: { status: number } | null) => !!e && e.status !== 409 && e.status !== 429
   const left = REGEN_MAX - p.regenCount
   const regening = regen.isPending || p.activeJobType === 'REGEN'
+  const job = jobLabel(ai.isPending ? 'AI_IMAGE' : blockRegen.isPending ? 'BLOCK_REGEN' : regening ? 'REGEN' : p.activeJobType)
+  const picked = preview.data ? findImage(preview.data.blocks, selectedImage) : undefined
 
   return (
     <div className={styles.page}>
       {busy && (
         <Banner tone="info" spinner>
-          {regening ? '재생성 중입니다…' : '생성 중입니다...'} (최대 90초, 경과 {formatElapsed(now - since)})
+          {job}입니다… (최대 90초, 경과 {formatElapsed(now - since)})
         </Banner>
       )}
       {waiting && <Banner tone="info">요청이 많습니다. {waiting.retryAfter ?? 10}초 뒤 다시 시도합니다</Banner>}
@@ -71,13 +84,14 @@ export function EditorPage() {
               type="button"
               className="btn-secondary"
               disabled={!flags.regenerate}
+              title="직접 수정한 내용이 초기화됩니다"
               onClick={() =>
                 regen.mutate(undefined, {
                   onSuccess: () => setToast({ tone: 'info', text: '재생성했습니다. 수동 편집 내용은 초기화되었습니다' }),
                 })
               }
             >
-              {regen.isPending && <span className="spinner" />}재생성
+              {regen.isPending && <span className="spinner" />}전체 재생성
             </button>
             <div className={styles.publishBar}>
               <button type="button" className="btn-primary btn-sm" disabled={!flags.publish} onClick={() => setModal('publish')}>
@@ -90,11 +104,28 @@ export function EditorPage() {
       <div className={styles.body}>
         <section className={styles.canvas} aria-label="미리보기">
           {preview.data ? (
-            <PreviewFrame html={preview.data.html} />
+            <PreviewFrame
+              html={preview.data.html}
+              editable={flags.save}
+              onSelect={selectBlock}
+              onImageSelect={selectImage}
+              selectedImage={selectedImage}
+              onEdit={async (i) => {
+                try {
+                  await save.mutateAsync(i)
+                  return true
+                } catch (e) {
+                  const st = (e as { status?: number }).status
+                  // 409·429는 전역 토스트가 안내한다
+                  if (st !== 409 && st !== 429) setToast({ tone: 'error', text: messageOf(e, { VALIDATION_FAILED: 'HTML 태그는 입력할 수 없습니다 (2,000자 이하)' }) })
+                  return false
+                }
+              }}
+            />
           ) : (
             <div className={styles.empty}>
               {busy || (preview.isPending && hasPreview) ? (
-                <p className="loading"><span className="spinner" />{busy ? (regening ? '재생성 중' : '생성 중') : '불러오는 중'}</p>
+                <p className="loading"><span className="spinner" />{busy ? job : '불러오는 중'}</p>
               ) : preview.isError ? (
                 <p className="field-error" role="alert">{messageOf(preview.error)}</p>
               ) : null}
@@ -105,6 +136,21 @@ export function EditorPage() {
           {hasPreview ? (
             <>
               {preview.data && (
+                <ImagePanel
+                  projectId={p.id}
+                  blocks={preview.data.blocks}
+                  aiImageCount={p.aiImageCount}
+                  canImage={flags.image}
+                  canAi={flags.aiImage}
+                  aiPending={ai.isPending}
+                  aiError={ai.error}
+                  onAi={(i) => ai.mutate(i)}
+                  stylePending={imgStyle.isPending}
+                  styleError={imgStyle.error}
+                  onStyle={(i) => imgStyle.mutate(i)}
+                />
+              )}
+              {preview.data && (
                 <BlockEditor
                   blocks={preview.data.blocks}
                   version={preview.data.version}
@@ -112,6 +158,11 @@ export function EditorPage() {
                   saving={save.isPending}
                   error={save.error}
                   onSave={(i) => save.mutate(i)}
+                  blockRegenCount={p.blockRegenCount}
+                  canRegen={flags.blockRegen}
+                  regenPending={blockRegen.isPending}
+                  regenError={blockRegen.error}
+                  onRegen={(blockId) => blockRegen.mutate(blockId)}
                 />
               )}
               {showError(regen.error) && <p className="field-error" role="alert">{messageOf(regen.error)}</p>}
@@ -127,6 +178,9 @@ export function EditorPage() {
         </aside>
       </div>
       {modal === 'publish' && id && <PublishModal projectId={id} balance={me.data?.balance} />}
+      {modal === 'images' && id && selectedImage && picked && (
+        <ImagePickerModal projectId={id} target={selectedImage} currentAssetId={picked.assetId} />
+      )}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import sharp from 'sharp'
 import { pool, query, withTx } from '../db.js'
 import { AppError } from '../lib/errors.js'
 import { storage, assetKeys } from '../lib/storage.js'
-import { REGEN_MAX, ANALYZE_MAX, ASSET_MAX_COUNT, PREVIEW_IMAGE_WIDTH } from '../config.js'
+import { REGEN_MAX, ANALYZE_MAX, AI_IMAGE_MAX, BLOCK_REGEN_MAX, ASSET_MAX_COUNT, PREVIEW_IMAGE_WIDTH } from '../config.js'
 import { assertEligible } from './eligibility.js'
 
 // NM-10, PP-05: 화이트리스트 매퍼. draft_html·final_html은 내보내지 않는다(BR-32)
@@ -17,6 +17,8 @@ export const toProject = (row) => ({
   regenCount: row.regen_count,
   aiEditCount: row.ai_edit_count,
   aiEditFailCount: row.ai_edit_fail_count,
+  aiImageCount: row.ai_image_count,
+  blockRegenCount: row.block_regen_count,
   activeJobType: row.active_job_type,
   activeJobStartedAt: row.active_job_started_at,
   publishedAt: row.published_at,
@@ -78,25 +80,33 @@ export async function saveForm(userId, projectId, form, version) {
   return toProject(r.rows[0])
 }
 
-// 허용 상태: GENERATE·ANALYZE = DRAFT·ANALYZED(FR-14, FR-12), REGEN = GENERATED·EDITING(FR-15)
-export const JOB_STATES = { GENERATE: ['DRAFT', 'ANALYZED'], REGEN: ['GENERATED', 'EDITING'], ANALYZE: ['DRAFT', 'ANALYZED'] }
+// 허용 상태: GENERATE·ANALYZE = DRAFT·ANALYZED(FR-14, FR-12), REGEN·AI_IMAGE·BLOCK_REGEN = GENERATED·EDITING(FR-15)
+export const JOB_STATES = {
+  GENERATE: ['DRAFT', 'ANALYZED'], REGEN: ['GENERATED', 'EDITING'], ANALYZE: ['DRAFT', 'ANALYZED'], AI_IMAGE: ['GENERATED', 'EDITING'],
+  BLOCK_REGEN: ['GENERATED', 'EDITING'],
+}
 
 // FR-35, BR-47: 조건부 UPDATE 1건으로 선점(REGEN·ANALYZE는 같은 문장에서 횟수 소모, D-5·D-27)
 export async function reserveJob(projectId, version, type) {
   const r = await query(
     `UPDATE projects SET active_job_type = $3::text, active_job_started_at = now(),
        regen_count = regen_count + CASE WHEN $3::text = 'REGEN' THEN 1 ELSE 0 END,
-       analyze_count = analyze_count + CASE WHEN $3::text = 'ANALYZE' THEN 1 ELSE 0 END
+       analyze_count = analyze_count + CASE WHEN $3::text = 'ANALYZE' THEN 1 ELSE 0 END,
+       ai_image_count = ai_image_count + CASE WHEN $3::text = 'AI_IMAGE' THEN 1 ELSE 0 END,
+       block_regen_count = block_regen_count + CASE WHEN $3::text = 'BLOCK_REGEN' THEN 1 ELSE 0 END
      WHERE id = $1 AND version = $2 AND active_job_type IS NULL AND status = ANY($4)
        AND ($3::text <> 'REGEN' OR regen_count < $5) AND ($3::text <> 'ANALYZE' OR analyze_count < $6)
+       AND ($3::text <> 'AI_IMAGE' OR ai_image_count < $7) AND ($3::text <> 'BLOCK_REGEN' OR block_regen_count < $8)
      RETURNING *`,
-    [projectId, version, type, JOB_STATES[type], REGEN_MAX, ANALYZE_MAX],
+    [projectId, version, type, JOB_STATES[type], REGEN_MAX, ANALYZE_MAX, AI_IMAGE_MAX, BLOCK_REGEN_MAX],
   )
   if (r.rowCount === 1) return r.rows[0]
   const cur = (await query('SELECT * FROM projects WHERE id = $1', [projectId])).rows[0]
   assertWritable(cur, JOB_STATES[type], version) // 상태 → version → 작업
   if (type === 'REGEN' && cur.regen_count >= REGEN_MAX) throw new AppError(429, 'REGEN_LIMIT')
   if (type === 'ANALYZE' && cur.analyze_count >= ANALYZE_MAX) throw new AppError(429, 'ANALYZE_LIMIT')
+  if (type === 'AI_IMAGE' && cur.ai_image_count >= AI_IMAGE_MAX) throw new AppError(429, 'AI_IMAGE_LIMIT')
+  if (type === 'BLOCK_REGEN' && cur.block_regen_count >= BLOCK_REGEN_MAX) throw new AppError(429, 'BLOCK_REGEN_LIMIT')
   throw new AppError(409, 'JOB_IN_PROGRESS')
 }
 
@@ -105,7 +115,9 @@ export async function releaseJob(projectId, type, restore) {
   await query(
     `UPDATE projects SET active_job_type = NULL, active_job_started_at = NULL,
        regen_count = regen_count - CASE WHEN $3::boolean AND active_job_type = 'REGEN' THEN 1 ELSE 0 END,
-       analyze_count = analyze_count - CASE WHEN $3::boolean AND active_job_type = 'ANALYZE' THEN 1 ELSE 0 END
+       analyze_count = analyze_count - CASE WHEN $3::boolean AND active_job_type = 'ANALYZE' THEN 1 ELSE 0 END,
+       ai_image_count = ai_image_count - CASE WHEN $3::boolean AND active_job_type = 'AI_IMAGE' THEN 1 ELSE 0 END,
+       block_regen_count = block_regen_count - CASE WHEN $3::boolean AND active_job_type = 'BLOCK_REGEN' THEN 1 ELSE 0 END
      WHERE id = $1 AND active_job_type = $2`,
     [projectId, type, restore],
   )
@@ -126,34 +138,42 @@ async function makePreview(buf) {
   return sharp(data).composite([{ input: Buffer.from(mark) }]).webp().toBuffer()
 }
 
-const countAssets = async (db, projectId) =>
+export const countAssets = async (db, projectId) =>
   (await db.query('SELECT count(*)::int AS n FROM assets WHERE project_id = $1', [projectId])).rows[0].n
 
-// FR-11, D-19: 실제 이미지(sharp 판독)만, 프로젝트당 10장. version 불변·진행 중 작업 무관[가정]
-export async function uploadAsset(userId, projectId, file) {
-  await loadProjectForWrite(userId, projectId)
+// 실제 이미지(sharp 판독)만 원본·프리뷰를 저장한다. 업로드와 AI 변환 결과가 공유
+// ponytail: 이후 400·실패 시 이미 올린 객체는 고아로 남음(정리 job은 필요해지면)
+export async function prepareAsset(projectId, buffer) {
   let mime, preview
   try {
-    mime = FORMAT_MIME[(await sharp(file.buffer).metadata()).format] // 클라이언트 MIME이 아니라 실제 형식
+    mime = FORMAT_MIME[(await sharp(buffer).metadata()).format] // 클라이언트 MIME이 아니라 실제 형식
     if (!mime) throw badImage()
-    preview = await makePreview(file.buffer)
+    preview = await makePreview(buffer)
   } catch {
     throw badImage()
   }
-  if (await countAssets(pool, projectId) >= ASSET_MAX_COUNT) throw badImage()
-
   const id = randomUUID()
   const keys = assetKeys(projectId, id, mime)
-  // ponytail: 이후 400·실패 시 이미 올린 객체는 고아로 남음(정리 job은 필요해지면)
-  await storage.put('private', keys.original, file.buffer, mime)
+  await storage.put('private', keys.original, buffer, mime)
   await storage.put('private', keys.preview, preview, 'image/webp')
-  await withTx(async (client) => {
-    await client.query('SELECT id FROM projects WHERE id = $1 FOR UPDATE', [projectId]) // 동시 업로드 직렬화
-    if (await countAssets(client, projectId) >= ASSET_MAX_COUNT) throw badImage()
-    await client.query(
-      'INSERT INTO assets (id, project_id, original_key, preview_key, mime, size) VALUES ($1, $2, $3, $4, $5, $6)',
-      [id, projectId, keys.original, keys.preview, mime, file.size],
-    )
-  })
-  return { id }
+  return { id, keys, mime, size: buffer.length }
+}
+
+// TX 안에서: 프로젝트 행 잠금(동시 추가 직렬화) → 10장 재확인 → INSERT
+export async function insertAsset(client, projectId, { id, keys, mime, size }) {
+  await client.query('SELECT id FROM projects WHERE id = $1 FOR UPDATE', [projectId])
+  if (await countAssets(client, projectId) >= ASSET_MAX_COUNT) throw badImage()
+  await client.query(
+    'INSERT INTO assets (id, project_id, original_key, preview_key, mime, size) VALUES ($1, $2, $3, $4, $5, $6)',
+    [id, projectId, keys.original, keys.preview, mime, size],
+  )
+}
+
+// FR-11, D-19: 프로젝트당 10장. version 불변·진행 중 작업 무관[가정]
+export async function uploadAsset(userId, projectId, file) {
+  await loadProjectForWrite(userId, projectId)
+  if (await countAssets(pool, projectId) >= ASSET_MAX_COUNT) throw badImage()
+  const asset = await prepareAsset(projectId, file.buffer)
+  await withTx((client) => insertAsset(client, projectId, asset))
+  return { id: asset.id }
 }

@@ -1,6 +1,6 @@
-import { query } from '../db.js'
+import { query, withTx } from '../db.js'
 import { AppError } from '../lib/errors.js'
-import { sanitizeHtml } from '../lib/html.js'
+import { sanitizeHtml, blockHtml, replaceBlock } from '../lib/html.js'
 import { callRole } from '../llm/index.js'
 import { FORM_LIMITS, HTML_ROOT_WIDTH_PX } from '../config.js'
 import { loadProjectForWrite, assertWritable, reserveJob, releaseJob, JOB_STATES } from './projects.js'
@@ -22,11 +22,16 @@ function assertRequired(form) {
   if (!ok) throw new AppError(400, 'VALIDATION_FAILED')
 }
 
-function buildPrompt(form, usps, assetIds) {
+function productLines(form, usps) {
   const t = (k) => (typeof form[k] === 'string' ? form[k].trim() : '')
   const lines = [`제품명: ${t('productName')}`, `카테고리: ${t('category')}`, `소개: ${t('intro')}`]
   if (t('toneGuide')) lines.push(`톤 가이드: ${t('toneGuide')}`)
   if (usps.length) lines.push(`강조할 USP: ${usps.join(', ')}`) // BR-25: 빈 배열이면 분석 생략
+  return lines
+}
+
+function buildPrompt(form, usps, assetIds) {
+  const lines = productLines(form, usps)
   // LLM이 긴 uuid를 옮겨 적다 틀리므로 짧은 번호를 주고 응답에서 되돌린다(restoreAssetRefs)
   lines.push(`사용할 이미지(각각 <img src="asset:번호">로 배치): ${assetIds.map((_, i) => `asset:${i + 1}`).join(', ')}`)
   return lines.join('\n')
@@ -38,8 +43,13 @@ const restoreAssetRefs = (text, assetIds) =>
 
 const stripFence = (text) => text.replace(/^\s*```(?:html)?\s*/i, '').replace(/\s*```\s*$/, '')
 
+// 번호(asset:n)가 호출마다 같은 asset을 가리키도록 정렬
 const listAssetIds = async (projectId) =>
-  (await query('SELECT id FROM assets WHERE project_id = $1', [projectId])).rows.map((a) => a.id)
+  (await query('SELECT id FROM assets WHERE project_id = $1 ORDER BY created_at, id', [projectId])).rows.map((a) => a.id)
+
+// asset:uuid → asset:번호(프롬프트용, restoreAssetRefs의 역)
+const aliasAssetRefs = (html, assetIds) =>
+  html.replace(/asset:([0-9a-f-]{36})/g, (m, id) => (assetIds.includes(id) ? `asset:${assetIds.indexOf(id) + 1}` : m))
 
 // 선점된 작업 실행. LLM은 TX 밖(커넥션 점유 없음). REGEN은 실패 시 횟수 복원
 async function runReserved(row, userId, version, type, assetIds) {
@@ -83,4 +93,52 @@ export async function regenerate(userId, projectId, version) {
   const row = await loadProjectForWrite(userId, projectId)
   await reserveJob(projectId, version, 'REGEN') // FR-35, 4번째는 429 REGEN_LIMIT
   return runReserved(row, userId, version, 'REGEN', await listAssetIds(projectId))
+}
+
+// 블록 재생성: 현재 draft 전체를 보여 주고 그 블록만 다시 쓰게 한다. 프로젝트당 BLOCK_REGEN_MAX회(성공만), 다른 블록의 편집은 유지
+export async function blockRegenerate(userId, projectId, { blockId, version }) {
+  const row = await loadProjectForWrite(userId, projectId) // 404 → 409 PUBLISHED → 403 → 402
+  assertWritable(row, JOB_STATES.BLOCK_REGEN, version)
+  const target = blockHtml(row.draft_html, blockId)
+  if (target === null) throw new AppError(400, 'VALIDATION_FAILED')
+  await reserveJob(projectId, version, 'BLOCK_REGEN') // 소진 시 429 BLOCK_REGEN_LIMIT
+
+  let updated
+  try {
+    const assetIds = await listAssetIds(projectId)
+    const prompt = [
+      ...productLines(row.form, row.selected_usps),
+      `사용할 수 있는 이미지: ${assetIds.map((_, i) => `asset:${i + 1}`).join(', ')}`,
+      '',
+      `아래는 현재 상세페이지 전체 HTML이다. 전체 스타일(색, 글꼴 크기, 여백, 톤)을 유지하면서 data-block-id="${blockId}" 블록만 새로 작성하라. ` +
+        '그 블록 하나(<section> 하나)만 출력하라. 다른 블록은 출력하지 마라.',
+      '[전체 HTML]',
+      aliasAssetRefs(row.draft_html, assetIds),
+      '',
+      '[다시 작성할 블록]',
+      aliasAssetRefs(target, assetIds),
+    ].join('\n')
+    const { text } = await callRole('MAIN', { system: SYSTEM, prompt }, { userId, projectId })
+    const draft = replaceBlock(row.draft_html, blockId, restoreAssetRefs(stripFence(text), assetIds)) // LY-18
+    if (draft === null) throw new AppError(502, 'UPSTREAM_FAILED') // 정제 후 빈 블록
+
+    updated = await withTx(async (client) => {
+      const r = await client.query(
+        `UPDATE projects SET draft_html = $3, status = 'EDITING', version = version + 1,
+           active_job_type = NULL, active_job_started_at = NULL
+         WHERE id = $1 AND version = $2 AND active_job_type = 'BLOCK_REGEN' RETURNING *`,
+        [projectId, version, draft],
+      )
+      if (r.rowCount === 0) throw new AppError(409, 'VERSION_CONFLICT') // 선점이 풀렸으면 폐기
+      await client.query(
+        `INSERT INTO edit_operations (project_id, type, block_id, payload) VALUES ($1, 'AI', $2, $3)`,
+        [projectId, blockId, { blockId, kind: 'BLOCK_REGEN' }],
+      )
+      return r.rows[0]
+    })
+  } catch (e) {
+    await releaseJob(projectId, 'BLOCK_REGEN', true) // BR-47: 횟수 복원
+    throw e
+  }
+  return buildPreview(updated)
 }

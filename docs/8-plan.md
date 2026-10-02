@@ -1,11 +1,11 @@
-# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.23 초안)
+# Coupang AI Detail Maker - 작업 실행 계획 (v0.1.24 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 작업 실행 계획(WBS) |
-| 버전 | v0.1.23 (초안) |
+| 버전 | v0.1.24 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
 | 기준 문서 버전 | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13, `docs/schema.sql`(MVP 11개 테이블, PGlite 실행 검증. DEC-04로 카운트 CHECK 4개를 `>= 0`으로 바꾼 뒤 PGlite 재실행 검증 완료: 테이블 11개 생성, 음수 거절) |
@@ -18,6 +18,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 문서 버전 | 변경내용 |
 |---|---|---|---|---|
+| v0.1.24 | 2026-10-02 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.13, 시나리오 v0.1.11, 와이어프레임 v0.1.12, 구조 원칙 v0.1.14, 아키텍처 v0.1.13, ERD v0.1.13 | 화면 직접 편집(체크박스 변경 없음): 3장 DEC-08 결정 서술, BE-12 수행 작업(내용 교체·줄바꿈), FE-06 수행 작업(프리뷰 안 클릭 편집) |
 | v0.1.23 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-06·07·08a·08b·09 완료 조건 체크, FE-10은 Safari 확인 1개 제외 체크(Chrome·Edge 360/768/1280 가로 스크롤 0), OPS-02는 로컬 충족 2개(PRD-V-4, dist 비밀값 0건) 체크. OPS-01 코드 부분(정적 서빙·SPA 폴백, Dockerfile, PM2 2프로세스)과 k6 스크립트 2개는 작성했으나 운영 인프라·docker·k6 미설치로 해당 완료 조건은 미충족. `node --test` 프론트 151/151, 백엔드 174/174 |
 | v0.1.22 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-02a~FE-05b 완료 조건 체크(29개, `[x]` 172개). `tsc --noEmit`·`npm run build` 통과, `node --test` 100/100(라인 커버리지 100%), 수동 조건은 브라우저 E2E로 확인(JWT_ACCESS_TTL_SEC=30 동시 5건 refresh 1회, `rt` 삭제, 업로드 3장·11장, 연속 저장, 상태별 이동, mock delay·fail, 503 자동 재시도) |
 | v0.1.21 | 2026-10-01 | hyunboee (Claude 작성) | 도메인 v0.3.13, PRD v0.3.12, 시나리오 v0.1.11, 와이어프레임 v0.1.11, 구조 원칙 v0.1.13, 아키텍처 v0.1.13, ERD v0.1.13 | FE-01a·FE-01b 완료 조건 체크(7개, `[x]` 143개). `tsc --noEmit` 통과, `npm run build` → `dist/index.html`·`dist/app/index.html`(noindex), 개발 서버 `/api` 프록시 401 전달 확인. 순수 TS 모듈(stores, queryClient)은 `node --test` 18/18, 라인 커버리지 100%(새 의존성 없음, QA-05 외 추가) |
@@ -84,7 +85,7 @@
 | DEC-05 | 폼(제품명 등) 저장 API·시점 | C-9, E-5, I-8 | `POST /api/projects` body / 생성 요청 body / 별도 저장 API. **결정: 별도 저장 API `PUT /api/projects/:id/form`**(body `{form, version}`, 자격 FR-06, version 확인, DRAFT·ANALYZED만 허용·그 외 409). `POST /api/projects`는 form을 선택적으로 받고, 필수값 검증(BR-35)은 생성 요청 시점 | 1일 차 오후 전 | BE-05a, BE-05b, FE-04a, FE-04b | 결정됨 |
 | DEC-06 | WING 출력 규격 실측(인라인 style·태그·외부 이미지 URL) | PRD-R-2, PRD-V-7, PRD-D-4, D-12, D-16 | 샘플 HTML 수동 붙여넣기 → 인라인 CSS·공개 URL 유지 / 규격 변경. **결정: 현재 규격 확정**(인라인 CSS 전용 + 만료 없는 공개 이미지 URL). 1일 차 오전 실측(PRD-V-7)은 검증 Task로 유지하되 블로커가 아니다. 인라인 style이나 외부 이미지가 막히면 그때 D-16/D-12를 재결정 | 1일 차 오전(실측) | 없음(블로커 해제) | 결정됨 |
 | DEC-07 | 오브젝트 스토리지 선택 | PRD-D-3, D-31 | S3 호환(R2 등), 비공개·공개 버킷 분리. **결정: Cloudflare R2**(`@aws-sdk/client-s3`). 버킷 2개: 비공개(원본·프리뷰 사본), 공개(퍼블리시 이미지, R2 공개 도메인) | 1일 차 오후 전 | BE-06 | 결정됨 |
-| DEC-08 | 블록 선택·편집 방식(`path` 의미, 블록 목록·현재 텍스트 출처) | N-6, FR-17 | 문서 제안 없음(WF-06은 패널 목록 방식으로 그림). **결정: 서버가 편집 대상 텍스트 요소에 블록 내 고유 `data-edit-id`를 부여**(생성 결과 정제 시). 프리뷰 응답에 `blocks: [{blockId, fields: [{editId, text}]}]`를 함께 반환, 에디터는 우측 패널 목록에서 선택(iframe 안 클릭 없음). 편집 요청 `{blockId, editId, text, version}`(FR-17의 `path`를 `editId`로 대체), 서버는 해당 요소의 텍스트 노드만 교체 | P2 2일 차 전 | BE-10b, BE-12, FE-06 | 결정됨 |
+| DEC-08 | 블록 선택·편집 방식(`path` 의미, 블록 목록·현재 텍스트 출처) | N-6, FR-17 | 문서 제안 없음(WF-06은 패널 목록 방식으로 그림). **결정: 서버가 편집 대상 텍스트 요소에 블록 내 고유 `data-edit-id`를 부여**(생성 결과 정제 시). 프리뷰 응답에 `blocks: [{blockId, fields: [{editId, text}]}]`를 함께 반환, 에디터는 프리뷰 iframe 안 클릭 편집과 우측 패널 목록 편집을 함께 제공(2026-10-02 변경, FR-17). 편집 요청 `{blockId, editId, text, version}`(FR-17의 `path`를 `editId`로 대체), 서버는 해당 요소의 내용을 글자로 교체(줄바꿈은 <br>) | P2 2일 차 전 | BE-10b, BE-12, FE-06 | 결정됨 |
 | DEC-09 | 오류 코드 채택과 403·402 우선순위 | C-2, I-2, I-4, I-7 | 구조 원칙 4.2절 제안 코드 채택 여부, 동시 해당 시 403/402 순서. **결정: 4.2절 코드 전부 채택**(502 `UPSTREAM_FAILED` 포함, 새 코드 없음). 판정 순서 401 → 409(PUBLISHED 대상) → 403 → 402 → 409(version·진행 중 작업) → 429 → 503. 프론트는 `TOKEN_INVALID`를 갱신 시도 없이 인증 상태 비우고 로그인 화면으로 | 1일 차 오전(BE-03a 전) | BE-03a, BE-08a, BE-13 | 결정됨 |
 | DEC-10 | 계정 일일 LLM 상한 기준 시각 | E-14, I-20, FR-29 | 자정 기준(Asia/Seoul) / 24시간 롤링. **결정: Asia/Seoul 자정 기준.** 집계 `created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`, 429 응답에 초기화 시각 필드는 없고 프론트엔드가 고정 문구("내일 0시(한국 시간)에 초기화")로 안내 | 1일 차 오후 전 | BE-08b | 결정됨 |
 
@@ -635,7 +636,7 @@ flowchart LR
 - 선행: BE-10b, DEC-08(결정됨)
 - 관련: FR-17, FR-20, FR-34, FR-35, BR-10, BR-40, BR-44, BR-46, BR-48, N-6, US-13, US-16, WF-06, AC-BR40, AC-BR44, AC-BR46, AC-BR48
 - 수행 작업:
-  - `lib/html.js`에 블록 텍스트 적용 함수: `blockId` 안 `data-edit-id=editId` 요소의 텍스트 노드만 교체(HTML 금지, DEC-08).
+  - `lib/html.js`에 블록 텍스트 적용 함수: `blockId` 안 `data-edit-id=editId` 요소의 내용을 글자로 교체(이스케이프, 줄바꿈은 <br>, HTML 금지, DEC-08).
   - `POST /api/projects/:id/edits`(자격 `assertEligible`, 프로젝트 조회 직후 소유 → PUBLISHED 409 → 자격 순): body `{blockId, editId, text, version}`만 허용, text에 태그 → 400, 블록에 없는 `editId` → 400.
   - 짧은 TX: PUBLISHED → 409 `INVALID_STATE`, 진행 중 작업 → 409, version 불일치 → 409. 적용 → `draft_html`, GENERATED → EDITING, version+1, `edit_operations`(MANUAL, payload `{editId, text}`) 1행. 응답은 새 version + 새 프리뷰(`blocks` 포함).
 - 완료 조건:
@@ -837,7 +838,7 @@ flowchart LR
 - 선행: FE-05b, BE-11, BE-12, DEC-08(결정됨)
 - 관련: FR-15, FR-17, FR-34, US-11, US-13, WF-06, N-6, I-14, I-15
 - 수행 작업:
-  - 우측 패널 목록에서 블록·필드 선택(프리뷰 응답의 `blocks`, iframe 안 클릭 선택 없음), 텍스트 편집·저장(`{blockId, editId, text, version}`, DEC-08), 재생성 버튼(남은 횟수 = 3 − regenCount), 409 → 프로젝트·프리뷰 재조회, 429 토스트, 재생성 시 편집 초기화 안내.
+  - 프리뷰 iframe 안 클릭 편집(Enter 저장, Shift+Enter 줄바꿈, Esc 취소, 저장 실패 시 원래 글자로 복원)과 우측 패널 목록에서 블록·필드 선택(프리뷰 응답의 `blocks`), 텍스트 편집·저장(`{blockId, editId, text, version}`, DEC-08), 재생성 버튼(남은 횟수 = 3 − regenCount), 409 → 프로젝트·프리뷰 재조회, 429 토스트, 재생성 시 편집 초기화 안내.
 - 완료 조건:
   - [x] 패널 목록의 블록·필드에 현재 텍스트가 채워지고, 저장 → 새 프리뷰에 반영, version +1 표시(US-13)
   - [x] 두 탭에서 같은 version 저장 → 늦은 탭 409 후 최신 프리뷰로 갱신

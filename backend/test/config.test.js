@@ -95,7 +95,7 @@ test('config B1 기본값·상수(개발: FRONTEND_ORIGIN·LLM mock 기본, TTL 
     [60000, 60, 10, 30, '1mb'])
   assert.equal(c.LLM_TIMEOUT_MS, 90000)
   assert.deepEqual(c.LLM_DAILY_LIMIT, { MAIN: 20, LIGHT: 50 })
-  assert.deepEqual(c.LLM_CONCURRENCY, { MAIN: 20, LIGHT: 40 })
+  assert.deepEqual(c.LLM_CONCURRENCY, { MAIN: 20, LIGHT: 40, IMAGE: 10 })
   assert.deepEqual([c.LLM_QUEUE_MAX, c.LLM_QUEUE_WAIT_MS, c.LLM_RETRY_AFTER_SEC, c.HTML_ROOT_WIDTH_PX], [100, 30000, 10, 780])
 
   const set = load({ FRONTEND_ORIGIN: 'https://app.example', JWT_ACCESS_TTL_SEC: '60', TRUST_PROXY: '1',

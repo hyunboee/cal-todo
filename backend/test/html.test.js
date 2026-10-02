@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import * as cheerio from 'cheerio'
-import { sanitizeHtml, addWatermark, listAssetRefs, replaceImages } from '../src/lib/html.js'
+import { sanitizeHtml, addWatermark, listAssetRefs, replaceImages, extractBlocks, applyTextEdit } from '../src/lib/html.js'
 
 // DB 미사용(pool.end 불필요). 결과는 cheerio 조각 모드로 검사한다.
 const load = (html) => cheerio.load(html, null, false)
@@ -38,9 +38,10 @@ function assertClean(out) {
   assert.equal($('script, link, style, iframe, svg, math, form, input, button, object, embed, noscript, template, video, audio, canvas, base, meta, a, font').length, 0, out)
   $('*').each((_, el) => {
     for (const name of Object.keys(el.attribs)) {
-      assert.ok(['style', 'data-block-id', 'data-edit-id', 'alt', 'src'].includes(name), `${el.tagName}[${name}]`)
+      assert.ok(['style', 'data-block-id', 'data-edit-id', 'data-img-id', 'alt', 'src'].includes(name), `${el.tagName}[${name}]`)
       if (name === 'src') assert.equal(el.tagName, 'img')
       if (name === 'alt') assert.equal(el.tagName, 'img')
+      if (name === 'data-img-id') assert.equal(el.tagName, 'img')
     }
   })
   $('img').each((_, el) => assert.match(el.attribs.src, /^asset:[0-9a-f-]{36}$/))
@@ -190,4 +191,16 @@ test('BE-07b ② 추가: listAssetRefs 문서 순서·중복 제거, replaceImag
     [['data:image/webp;base64,AAAA', 'b'], ['data:image/webp;base64,AAAA', 'b2']])
   assert.ok(!out.includes(`asset:${A}`))
   assert.equal($('p').text(), 't')
+})
+
+test('서식이 섞인 문장·줄바꿈·떠 있는 글자도 편집 대상(화면 직접 편집), 저장 시 줄바꿈은 <br>, 글자는 이스케이프', () => {
+  const html = sanitizeHtml('<section><p>정가 <s>39,900원</s> → <strong>29,900원</strong> 할인</p><ul><li>첫째<br>둘째</li></ul><div>안내<p>하위</p></div></section>')
+  const fields = extractBlocks(html).flatMap((b) => b.fields.map((f) => f.text))
+  assert.deepEqual(fields, ['정가 39,900원 → 29,900원 할인', '첫째\n둘째', '안내', '하위'])
+  const $ = load(html)
+  assert.equal($('s[data-edit-id], strong[data-edit-id]').length, 0, '바깥 문장만 편집 ID')
+  const li = extractBlocks(html).find((b) => b.fields[0]?.text === '첫째\n둘째')
+  const edited = applyTextEdit(html, li.blockId, li.fields[0].editId, '새 줄\n<b>아님</b> & 끝')
+  assert.match(edited, /<li data-edit-id="[^"]+">새 줄<br>&lt;b&gt;아님&lt;\/b&gt; &amp; 끝<\/li>/)
+  assert.equal(extractBlocks(edited).find((b) => b.blockId === li.blockId).fields[0].text, '새 줄\n<b>아님</b> & 끝')
 })

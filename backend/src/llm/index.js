@@ -1,12 +1,13 @@
 // LY-08: provider·모델 이름은 이 파일과 config.js에만 둔다.
 import { setTimeout as sleep } from 'node:timers/promises'
-import { generateText } from 'ai'
+import { generateText, generateImage } from 'ai'
 import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
+import sharp from 'sharp'
 import { query } from '../db.js'
 import { AppError } from '../lib/errors.js'
 import {
-  LLM_MAIN, LLM_LIGHT, LLM_TIMEOUT_MS, LLM_DAILY_LIMIT, LLM_CONCURRENCY,
+  LLM_MAIN, LLM_LIGHT, LLM_IMAGE, LLM_TIMEOUT_MS, LLM_DAILY_LIMIT, LLM_CONCURRENCY,
   LLM_QUEUE_MAX, LLM_QUEUE_WAIT_MS, LLM_RETRY_AFTER_SEC,
 } from '../config.js'
 
@@ -16,12 +17,13 @@ export function parseModel(value) {
 }
 
 // 호출 시점에 읽는다(테스트가 교체 가능)
-export const roleModels = { MAIN: parseModel(LLM_MAIN), LIGHT: parseModel(LLM_LIGHT) }
+export const roleModels = { MAIN: parseModel(LLM_MAIN), LIGHT: parseModel(LLM_LIGHT), IMAGE: parseModel(LLM_IMAGE) }
 
 const providers = { google, anthropic }
 export function resolveModel(role) {
   const { provider, modelId } = roleModels[role]
-  return provider === 'mock' ? null : providers[provider](modelId)
+  if (provider === 'mock') return null
+  return role === 'IMAGE' ? providers[provider].image(modelId) : providers[provider](modelId)
 }
 
 const busy = () => Object.assign(new AppError(503, 'LLM_BUSY'), { retryAfter: LLM_RETRY_AFTER_SEC })
@@ -67,6 +69,7 @@ export function createSemaphore(max, queueMax, waitMs) {
 export const semaphores = {
   MAIN: createSemaphore(LLM_CONCURRENCY.MAIN, LLM_QUEUE_MAX, LLM_QUEUE_WAIT_MS),
   LIGHT: createSemaphore(LLM_CONCURRENCY.LIGHT, LLM_QUEUE_MAX, LLM_QUEUE_WAIT_MS),
+  IMAGE: createSemaphore(LLM_CONCURRENCY.IMAGE, LLM_QUEUE_MAX, LLM_QUEUE_WAIT_MS),
 }
 
 export const MOCK_USPS = ['가벼운 무게', '강력한 흡입력', '긴 배터리 수명']
@@ -77,11 +80,12 @@ const MOCK_MAIN_HTML = `<section><h2>핵심 특징</h2><p class="lead" onclick="
 <link rel="stylesheet" href="https://evil.example/x.css"><style>p{color:red}</style>`
 
 // QA-03: mock:ok | mock:fail | mock:delay:<ms>
-async function mockGenerate(role, modelId, prompt, signal) {
+async function mockGenerate(role, modelId, prompt, image, signal) {
   const delay = /^delay:(\d+)$/.exec(modelId)
   if (delay) await sleep(Number(delay[1]), undefined, { signal })
   else if (modelId !== 'ok') throw new Error('mock failure')
   if (role === 'LIGHT') return { text: JSON.stringify(MOCK_USPS) }
+  if (role === 'IMAGE') return { image: await sharp(image).negate({ alpha: false }).png().toBuffer() } // 색 반전
   const imgs = [...new Set(prompt.match(/asset:(?:[0-9a-f-]{36}|\d+)\b/g) ?? [])].map((a) => `<img src="${a}" alt="">`)
   return { text: MOCK_MAIN_HTML.replace('{IMGS}', imgs.join('')) }
 }
@@ -89,17 +93,19 @@ async function mockGenerate(role, modelId, prompt, signal) {
 const log = (fields) => console.log(JSON.stringify({ ts: new Date().toISOString(), ...fields }))
 
 // 아키텍처 6장: 일일 상한 → 세마포어 → 호출(타임아웃) → 사용 로그(성공·실패 모두 1행, FR-28)
-export async function callRole(role, { system, prompt }, { userId, projectId = null }) {
+// IMAGE는 image(Buffer)를 받아 { text: undefined, image: Buffer }를 돌려준다
+export async function callRole(role, { system, prompt, image }, { userId, projectId = null }) {
   const sem = semaphores[role]
   const rejected = (code) => log({ level: 'warn', msg: 'llm_rejected', userId, role, code, queue: sem.queued })
 
-  // DEC-10, D-28. ponytail: 동시 요청은 상한을 몇 건 넘을 수 있음(프로젝트 선점이 1건으로 묶음)
+  // DEC-10, D-28. IMAGE는 MAIN 상한을 함께 쓴다[가정]. ponytail: 동시 요청은 상한을 몇 건 넘을 수 있음(프로젝트 선점이 1건으로 묶음)
+  const bucket = role === 'LIGHT' ? ['LIGHT'] : ['MAIN', 'IMAGE']
   const used = await query(
-    `SELECT count(*)::int AS count FROM llm_usage_logs WHERE user_id = $1 AND role = $2
+    `SELECT count(*)::int AS count FROM llm_usage_logs WHERE user_id = $1 AND role = ANY($2)
        AND created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul'`,
-    [userId, role],
+    [userId, bucket],
   )
-  if (used.rows[0].count >= LLM_DAILY_LIMIT[role]) {
+  if (used.rows[0].count >= LLM_DAILY_LIMIT[bucket[0]]) {
     rejected('DAILY_LLM_LIMIT')
     throw new AppError(429, 'DAILY_LLM_LIMIT')
   }
@@ -117,9 +123,12 @@ export async function callRole(role, { system, prompt }, { userId, projectId = n
   let result, error
   try {
     const abortSignal = AbortSignal.timeout(LLM_TIMEOUT_MS) // NFR-02
-    result = provider === 'mock'
-      ? await mockGenerate(role, modelId, prompt, abortSignal)
-      : await generateText({ model: resolveModel(role), system, prompt, abortSignal, maxRetries: 0 })
+    if (provider === 'mock') result = await mockGenerate(role, modelId, prompt, image, abortSignal)
+    else if (role === 'IMAGE') {
+      // 이미지가 없으면 NoImageGeneratedError → 아래에서 502
+      const r = await generateImage({ model: resolveModel(role), prompt: { images: [image], text: prompt }, abortSignal, maxRetries: 0 })
+      result = { usage: r.usage, image: Buffer.from(r.image.uint8Array) }
+    } else result = await generateText({ model: resolveModel(role), system, prompt, abortSignal, maxRetries: 0 })
   } catch (e) {
     error = e
   }
@@ -132,8 +141,8 @@ export async function callRole(role, { system, prompt }, { userId, projectId = n
   )
   log({
     level: error ? 'error' : 'info', msg: 'llm_call', userId, projectId, role, provider, model: modelId, ms,
-    success: !error, queue: sem.queued, active: sem.active, ...(error && { error: error.name }),
+    success: !error, queue: sem.queued, active: sem.active, ...(error && { error: error.name, status: error.statusCode }),
   })
   if (error) throw new AppError(502, 'UPSTREAM_FAILED')
-  return { text: result.text }
+  return { text: result.text, ...(role === 'IMAGE' && { image: result.image }) }
 }

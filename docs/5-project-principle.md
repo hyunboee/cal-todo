@@ -1,11 +1,11 @@
-# Coupang AI Detail Maker - 프로젝트 구조 설계 원칙 (v0.1.13 초안)
+# Coupang AI Detail Maker - 프로젝트 구조 설계 원칙 (v0.1.14 초안)
 
 ## 1. 문서 정보
 
 | 항목 | 내용 |
 |---|---|
 | 문서 | Coupang AI Detail Maker 프로젝트 구조 설계 원칙 |
-| 버전 | v0.1.13 (초안) |
+| 버전 | v0.1.14 (초안) |
 | 작성일 | 2026-09-30 |
 | 작성자 | hyunboee (Claude 작성) |
 | 기준 도메인 정의서 버전 | v0.3.13 (`docs/1-domain-definition.md`) |
@@ -25,6 +25,7 @@
 
 | 버전 | 일자 | 변경자 | 기준 도메인 | 기준 PRD | 변경내용 |
 |---|---|---|---|---|---|
+| v0.1.14 | 2026-10-02 | hyunboee (Claude 작성) | v0.3.13 | v0.3.13 | 화면 직접 편집: LY-12(sandbox `allow-same-origin`, `allow-scripts` 금지 유지) |
 | v0.1.13 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.13 | v0.3.12 | 의존 예외(require-auth)·일일 상한 안내 방식 정리: LY-06, 3.1 허용/금지 의존 표(middleware 행) |
 | v0.1.12 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.12 | v0.3.11 | 백엔드 구현 기준 최신화: LY-05(uuid 검사 위치, 정적 서빙 미구현 표시), LY-06(확장 토큰 허용 라우트 미구현), 6.1(`NODE_ENV`·`PORT` 기본값, S3 필수 변수, 구현된 상수 보충), OP-12(SIGINT), 7.3 디렉토리(package.json 스크립트, routes·lib·test 목록, 정적 서빙 미구현 표시) |
 | v0.1.11 | 2026-10-01 | hyunboee (Claude 작성) | v0.3.11 | v0.3.10 | 개발용 CORS·Swagger UI 반영: LY-05, 3.5(쓰지 않음 행), 6.1 `FRONTEND_ORIGIN` 행, OP-04, 7.3 디렉토리(middleware), 8.2 C-3 |
@@ -103,7 +104,7 @@ pages → components → hooks(TanStack Query) → api(client)
 | LY-09 | 컴포넌트는 `fetch`를 직접 부르지 않는다. 모든 요청은 `api/client.ts`를 거친다. client가 Bearer 헤더, 401 `TOKEN_EXPIRED` 갱신 단일화(동시 요청은 같은 Promise 대기), 1회 재시도, 갱신 실패 시 스토어·캐시 초기화를 전담한다 | FR-40 |
 | LY-10 | 오류 반응은 한 곳에서: 503은 QueryClient 재시도(`Retry-After`), 409는 해당 프로젝트 쿼리 무효화, 402·403은 `me` 기반 배너. 화면마다 따로 구현하지 않는다 | PRD 7.1, WF 5.2 |
 | LY-11 | Access Token은 메모리(Zustand)에만. localStorage·sessionStorage·URL 금지 | PRD 5.8, NFR-09 |
-| LY-12 | 프리뷰는 `sandbox` iframe(`allow-scripts` 없음)의 `srcdoc`으로만 렌더링한다. 서버 HTML을 `dangerouslySetInnerHTML`로 넣지 않는다 | FR-16, NFR-10 |
+| LY-12 | 프리뷰는 `sandbox="allow-same-origin"` iframe의 `srcdoc`으로만 렌더링한다. `allow-scripts`는 넣지 않는다(iframe 안 스크립트 실행 불가). `allow-same-origin`은 화면 직접 편집(FR-17)을 위해 앱이 편집 대상 요소를 `contenteditable`로 만들기 위해서만 둔다. 서버 HTML을 `dangerouslySetInnerHTML`로 넣지 않는다 | FR-16, FR-17, NFR-10 |
 | LY-13 | 정적 랜딩(`/`)은 React를 쓰지 않는 HTML/CSS다. SPA 코드를 import하지 않는다 | FR-31, P-1 |
 
 ### 3.3 확장 프로그램 (S)

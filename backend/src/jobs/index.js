@@ -6,7 +6,7 @@ const timers = []
 
 const logError = (fields) => console.log(JSON.stringify({ ts: new Date().toISOString(), level: 'error', ...fields }))
 
-// FR-35, BR-47: 선점 후 D-30(5분)이 지난 작업을 해제한다. REGEN은 regen_count 복원.
+// FR-35, BR-47: 선점 후 D-30(5분)이 지난 작업을 해제한다. REGEN은 regen_count, AI_IMAGE는 ai_image_count, BLOCK_REGEN은 block_regen_count 복원.
 // BR-26: ANALYZE/GENERATE는 표시만 해제(카운트 유지).
 // 동시 2회 실행 시 두 번째는 행 잠금 대기 후 재평가로 0행.
 // ponytail: AI_EDIT(S) 복원은 S 단계에서 CASE 추가
@@ -14,6 +14,8 @@ export async function releaseExpiredJobs(db = pool) {
   const r = await db.query(
     `UPDATE projects SET
        regen_count = CASE WHEN active_job_type = 'REGEN' THEN regen_count - 1 ELSE regen_count END,
+       ai_image_count = CASE WHEN active_job_type = 'AI_IMAGE' THEN ai_image_count - 1 ELSE ai_image_count END,
+       block_regen_count = CASE WHEN active_job_type = 'BLOCK_REGEN' THEN block_regen_count - 1 ELSE block_regen_count END,
        active_job_type = NULL, active_job_started_at = NULL
      WHERE active_job_started_at < now() - make_interval(mins => $1)`,
     [RESERVATION_TTL_MIN],
