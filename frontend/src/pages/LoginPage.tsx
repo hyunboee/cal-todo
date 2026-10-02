@@ -40,7 +40,7 @@ export function LoginPage() {
       <form className={`card ${styles.card}`} onSubmit={submit}>
         <div className={styles.tabs}>
           <button type="button" className="btn-secondary" aria-pressed={mode === 'login'} onClick={() => setMode('login')}>
-            로그인
+            로그인.
           </button>
           <button type="button" className="btn-secondary" aria-pressed={mode === 'signup'} onClick={() => setMode('signup')}>
             가입
