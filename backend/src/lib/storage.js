@@ -19,6 +19,7 @@ const s3 = STORAGE_DRIVER === 's3'
   ? new S3Client({
     endpoint: S3_ENDPOINT,
     region: S3_REGION,
+    forcePathStyle: true, // Supabase Storage(S3 호환)는 path-style만 지원. R2도 지원
     credentials: { accessKeyId: S3_ACCESS_KEY_ID, secretAccessKey: S3_SECRET_ACCESS_KEY },
   })
   : null

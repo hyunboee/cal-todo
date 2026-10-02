@@ -37,6 +37,33 @@ test('BE-01a ③ DB 중단 시 /healthz 503 {status:unavailable}', async (t) => 
   assert.deepEqual(await res.json(), { status: 'unavailable' })
 })
 
+test('GET /api/health: 인증 없이 200, DB 상태 ok와 응답 시간', async () => {
+  const res = await fetch(`${base}/api/health`)
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.status, 'ok')
+  assert.equal(body.db.status, 'ok')
+  assert.ok(Number.isInteger(body.db.latencyMs) && body.db.latencyMs >= 0)
+  assert.ok(!Number.isNaN(Date.parse(body.time)))
+})
+
+test('GET /api/health: DB 오류 503 unreachable(내부 오류 문구 비노출), 응답 없음 3초 뒤 503 timeout', async (t) => {
+  t.mock.method(pool, 'query', async () => { throw new Error('password authentication failed for user "x"') })
+  const down = await fetch(`${base}/api/health`)
+  assert.equal(down.status, 503)
+  const body = await down.json()
+  assert.equal(body.status, 'unavailable')
+  assert.deepEqual(body.db, { status: 'error', error: 'unreachable' })
+  assert.ok(!JSON.stringify(body).includes('password'))
+
+  t.mock.method(pool, 'query', () => new Promise(() => {}))
+  const started = Date.now()
+  const hang = await fetch(`${base}/api/health`)
+  assert.equal(hang.status, 503)
+  assert.deepEqual((await hang.json()).db, { status: 'error', error: 'timeout' })
+  assert.ok(Date.now() - started < 5000)
+})
+
 test('BE-01a ⑤ 없는 경로 404 {error:{code:NOT_FOUND}}', async () => {
   const res = await fetch(`${base}/nope`)
   assert.equal(res.status, 404)

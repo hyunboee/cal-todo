@@ -17,7 +17,8 @@ import { AppError } from './lib/errors.js'
 import { runAllJobs } from './jobs/index.js'
 import { TRUST_PROXY, JSON_BODY_LIMIT, NODE_ENV, CRON_SECRET } from './config.js'
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const HEALTH_DB_TIMEOUT_MS = 3000
+const UUID_RE =/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const SWAGGER_FILE = new URL('../swagger.yaml', import.meta.url)
 const SWAGGER_HTML = `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><title>Coupang AI Detail Maker API</title>
@@ -42,6 +43,24 @@ export function createApp() {
     } catch {
       res.status(503).json({ status: 'unavailable' })
     }
+  })
+
+  // 상세 헬스체크: DB 연결 상태와 응답 시간. DB가 멈춰도 3초 안에 503으로 답한다. 인증·로그 없음
+  app.get('/api/health', async (req, res) => {
+    const start = performance.now()
+    let timer
+    const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), HEALTH_DB_TIMEOUT_MS) })
+    let db
+    try {
+      await Promise.race([query('SELECT 1'), timeout])
+      db = { status: 'ok', latencyMs: Math.round(performance.now() - start) }
+    } catch (e) {
+      db = { status: 'error', error: e.message === 'timeout' ? 'timeout' : 'unreachable' } // 내부 오류 문구는 노출하지 않는다
+    } finally {
+      clearTimeout(timer)
+    }
+    const ok = db.status === 'ok'
+    res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'unavailable', time: new Date().toISOString(), db })
   })
 
   // 개발용 API 문서(Swagger UI, CDN). 운영에서는 노출하지 않는다.
