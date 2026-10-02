@@ -14,7 +14,8 @@ import { publishRouter } from './routes/publish.js'
 import { editRouter } from './routes/edit.js'
 import { analyzeRouter } from './routes/analyze.js'
 import { AppError } from './lib/errors.js'
-import { TRUST_PROXY, JSON_BODY_LIMIT, NODE_ENV } from './config.js'
+import { runAllJobs } from './jobs/index.js'
+import { TRUST_PROXY, JSON_BODY_LIMIT, NODE_ENV, CRON_SECRET } from './config.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const SWAGGER_FILE = new URL('../swagger.yaml', import.meta.url)
@@ -51,6 +52,14 @@ export function createApp() {
 
   app.use(requestLog)
   app.use(express.json({ limit: JSON_BODY_LIMIT }))
+  // 서버리스(Vercel)에서는 setInterval 주기 작업이 돌지 않아 Vercel Cron이 부른다(Authorization: Bearer CRON_SECRET)
+  if (CRON_SECRET) {
+    app.get('/api/internal/jobs', async (req, res, next) => {
+      if (req.get('authorization') !== `Bearer ${CRON_SECRET}`) return next(new AppError(401, 'TOKEN_INVALID'))
+      await runAllJobs()
+      res.json({ status: 'ok' })
+    })
+  }
   app.use('/api/auth', authRouter)
   // [가정] uuid 형식이 아닌 id는 404(pg 형식 오류 500 방지, 존재 비노출)
   app.use('/api/projects/:id', (req, res, next) =>

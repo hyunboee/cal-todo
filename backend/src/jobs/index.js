@@ -50,6 +50,10 @@ export async function runJob(fn) {
   }
 }
 
+// 주기 작업 전부 1회(시작 시, Vercel Cron)
+export const runAllJobs = () =>
+  Promise.all([runJob(releaseExpiredJobs), runJob(deleteExpiredRefreshTokens), runJob(reconcileLedger)]).then(() => {})
+
 export function startJobs() {
   timers.push(
     setInterval(() => runJob(releaseExpiredJobs), JOB_RESERVATION_INTERVAL_MS),
@@ -58,7 +62,7 @@ export function startJobs() {
       runJob(reconcileLedger)
     }, JOB_DAILY_INTERVAL_MS),
   )
-  return Promise.all([runJob(releaseExpiredJobs), runJob(deleteExpiredRefreshTokens), runJob(reconcileLedger)]).then(() => {})
+  return runAllJobs()
 }
 
 export function stopJobs() {

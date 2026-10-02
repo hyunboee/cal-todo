@@ -10,7 +10,8 @@ const positiveInt = (key, fallback) => {
 }
 
 export const DB_CONN_STRING = process.env.DB_CONN_STRING
-export const DB_POOL_MAX = 20 // NFR-05
+// NFR-05. 서버리스(Vercel)는 인스턴스마다 풀이 생기므로 DB_POOL_MAX를 작게(예: 3) 둔다
+export const DB_POOL_MAX = positiveInt('DB_POOL_MAX', 20)
 export const DB_STATEMENT_TIMEOUT_MS = 5000 // OP-09
 export const RESERVATION_TTL_MIN = 5 // D-30 (PP-09)
 export const JOB_RESERVATION_INTERVAL_MS = positiveInt('JOB_RESERVATION_INTERVAL_MS', 60000)
@@ -42,6 +43,8 @@ const devDefault = (key, fallback) => {
 }
 
 export const FRONTEND_ORIGIN = devDefault('FRONTEND_ORIGIN', 'http://localhost:5173')
+// Vercel Cron 인증 값(선택). 있으면 GET /api/internal/jobs가 주기 작업을 1회 실행한다
+export const CRON_SECRET = process.env.CRON_SECRET || ''
 // rt 쿠키 SameSite. 프론트·API가 같은 상위 도메인이면 strict, 서로 다른 도메인이면 none(Secure는 항상)
 export const COOKIE_SAMESITE = process.env.COOKIE_SAMESITE || 'strict'
 if (!['strict', 'none'].includes(COOKIE_SAMESITE)) throw new Error('COOKIE_SAMESITE must be strict or none')
