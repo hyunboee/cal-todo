@@ -1,4 +1,7 @@
 {
   "regions": ["icn1"],
-  "crons": [{ "path": "/api/internal/jobs", "schedule": "0 18 * * *" }]
+  "crons": [{ "path": "/api/internal/jobs", "schedule": "0 18 * * *" }],
+  "git": {
+    "deploymentEnabled": false
+  }
 }
