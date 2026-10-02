@@ -55,7 +55,8 @@ export function createApp() {
       await Promise.race([query('SELECT 1'), timeout])
       db = { status: 'ok', latencyMs: Math.round(performance.now() - start) }
     } catch (e) {
-      db = { status: 'error', error: e.message === 'timeout' ? 'timeout' : 'unreachable' } // 내부 오류 문구는 응답에 노출하지 않는다
+      // 내부 오류 문구는 응답에 노출하지 않는다. 진단용으로 오류 종류 코드(pg SQLSTATE·Node errno)만 준다
+      db = { status: 'error', error: e.message === 'timeout' ? 'timeout' : 'unreachable', code: typeof e.code === 'string' ? e.code : undefined }
       console.log(JSON.stringify({ ts: new Date().toISOString(), level: 'error', msg: 'health_db_failed', error: e.message })) // 원인은 서버 로그에만
     } finally {
       clearTimeout(timer)

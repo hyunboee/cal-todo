@@ -56,6 +56,10 @@ test('GET /api/health: DB 오류 503 unreachable(내부 오류 문구 비노출)
   assert.deepEqual(body.db, { status: 'error', error: 'unreachable' })
   assert.ok(!JSON.stringify(body).includes('password'))
 
+  t.mock.method(pool, 'query', async () => { throw Object.assign(new Error('password authentication failed for user "x"'), { code: '28P01' }) })
+  const coded = await (await fetch(`${base}/api/health`)).json()
+  assert.deepEqual(coded.db, { status: 'error', error: 'unreachable', code: '28P01' }) // 종류 코드만, 문구 없음
+
   t.mock.method(pool, 'query', () => new Promise(() => {}))
   const started = Date.now()
   const hang = await fetch(`${base}/api/health`)
