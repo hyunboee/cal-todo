@@ -143,6 +143,7 @@ export async function callRole(role, { system, prompt, image }, { userId, projec
     level: error ? 'error' : 'info', msg: 'llm_call', userId, projectId, role, provider, model: modelId, ms,
     success: !error, queue: sem.queued, active: sem.active, ...(error && { error: error.name, status: error.statusCode }),
   })
-  if (error) throw new AppError(502, 'UPSTREAM_FAILED')
+  // 진단용으로 상위 HTTP 상태 코드만 message에 붙인다(본문·키는 비노출)
+  if (error) throw new AppError(502, 'UPSTREAM_FAILED', error.statusCode ? `UPSTREAM_FAILED (${error.statusCode})` : 'UPSTREAM_FAILED')
   return { text: result.text, ...(role === 'IMAGE' && { image: result.image }) }
 }
